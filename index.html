@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi Cuatrimestre — Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F6F5F1;
+    --paper-line:#E1DED4;
+    --ink:#22201C;
+    --ink-soft:#5B584F;
+    --ink-faint:#9A968A;
+    --card:#FFFFFF;
+    --line:#D8D4C8;
+    --good:#3F7D5C;
+    --good-bg:#E4F1E9;
+    --warn:#B0791C;
+    --warn-bg:#FBF0DC;
+    --bad:#B0432E;
+    --bad-bg:#FBE6E1;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      linear-gradient(var(--paper-line) 1px, transparent 1px) 0 0/100% 28px,
+      var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    padding:20px 16px 60px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:760px;margin:0 auto;}
+
+  /* ---- Header ---- */
+  header{margin-bottom:14px;}
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    display:flex; justify-content:space-between; align-items:baseline;
+    margin-bottom:6px;
+    border-bottom:1px dashed var(--line);
+    padding-bottom:8px;
+  }
+  h1{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700;
+    font-size:24px;
+    line-height:1.15;
+    margin:0 0 4px;
+    letter-spacing:-0.01em;
+  }
+  .sub{font-size:13px; color:var(--ink-soft); margin:0;}
+
+  /* ---- Tabs ---- */
+  .tabs{
+    display:flex; gap:6px; margin:16px 0 18px;
+    overflow-x:auto; -webkit-overflow-scrolling:touch;
+    padding-bottom:2px;
+  }
+  .tab-btn{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px; letter-spacing:.06em; text-transform:uppercase;
+    padding:9px 15px; border-radius:20px;
+    border:1px solid var(--line);
+    background:var(--card); color:var(--ink-soft);
+    cursor:pointer; white-space:nowrap; flex-shrink:0;
+  }
+  .tab-btn.active{background:var(--ink); color:#fff; border-color:var(--ink);}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+
+  h2.section-title{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:15px; font-weight:600;
+    margin:0 0 10px;
+  }
+
+  /* ---- Overall / mini progress ---- */
+  .overall{
+    display:flex; gap:14px; align-items:center;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:14px 16px;
+    margin:0 0 16px;
+  }
+  .overall .num{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700; font-size:28px; line-height:1; white-space:nowrap;
+  }
+  .overall .num span{font-size:14px; font-weight:500; color:var(--ink-faint);}
+  .overall .desc{font-size:12px; color:var(--ink-soft); line-height:1.4;}
+
+  .mini-row{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px;}
+  .mini-card{
+    flex:1; min-width:135px;
+    background:var(--card); border:1px solid var(--line); border-radius:10px;
+    padding:10px 12px;
+  }
+  .mini-name{font-family:'IBM Plex Mono', monospace; font-size:9.5px; letter-spacing:.05em; color:var(--ink-soft); text-transform:uppercase;}
+  .mini-pct{font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:19px; margin-top:2px;}
+  .mini-badge{
+    display:inline-block; margin-top:5px;
+    font-family:'IBM Plex Mono', monospace; font-size:9px; font-weight:600;
+    padding:2px 7px; border-radius:10px; text-transform:uppercase;
+  }
+  .mini-badge.good{background:var(--good-bg); color:var(--good);}
+  .mini-badge.warn{background:var(--warn-bg); color:var(--warn);}
+  .mini-badge.bad{background:var(--bad-bg); color:var(--bad);}
+
+  /* ---- Progreso: tarjetas de materia (chips de 3 estados) ---- */
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden;}
+  .badge{
+    font-family:'IBM Plex Mono', monospace; font-size:10.5px; font-weight:600;
+    letter-spacing:.04em; padding:4px 9px; border-radius:20px; white-space:nowrap; text-transform:uppercase;
+  }
+  .badge.good{background:var(--good-bg); color:var(--good);}
+  .badge.warn{background:var(--warn-bg); color:var(--warn);}
+  .badge.bad{background:var(--bad-bg); color:var(--bad);}
+  .toggle:active{background:var(--paper);}
+  .chev{transition:transform .2s ease;}
+  .card.open .chev{transform:rotate(180deg);}
+  .list{max-height:0; overflow:hidden; transition:max-height .25s ease;}
+  .card.open .list{max-height:3000px;}
+  .item{display:flex; flex-direction:column; gap:7px; padding:10px 16px; border-top:1px solid var(--paper-line);}
+  .item.future{opacity:.5;}
+  .chip-future{opacity:.45;}
+  .item-txt{display:flex; justify-content:space-between; align-items:baseline; gap:8px;}
+  .item-date{font-family:'IBM Plex Mono', monospace; font-size:10.5px; color:var(--ink-faint);}
+  .item-name{font-size:13px; color:var(--ink); flex:1;}
+  .item-count{font-family:'IBM Plex Mono', monospace; font-size:10px; color:var(--ink-faint); white-space:nowrap;}
+  .item.done .item-name{color:var(--strong);}
+  .chips{display:flex; gap:6px; flex-wrap:wrap;}
+  .chip{
+    font-family:'IBM Plex Sans', sans-serif; font-size:11px; padding:5px 10px; border-radius:20px;
+    border:1.3px solid var(--line); background:#fff; color:var(--ink-soft); cursor:pointer;
+    display:flex; align-items:center; gap:5px;
+    transition:background .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .chip .dot{width:6px; height:6px; border-radius:50%; border:1.3px solid var(--ink-faint);}
+  .chip.empezado{background:var(--warn-bg); border-color:var(--warn); color:var(--warn);}
+  .chip.empezado .dot{background:var(--warn); border-color:var(--warn);}
+  .chip.hecho{background:var(--strong); border-color:var(--strong); color:#fff;}
+  .chip.hecho .dot{background:#fff; border-color:#fff;}
+
+  /* ---- Semana tab ---- */
+  .semana-grid{display:flex; flex-direction:column; gap:10px;}
+  .semana-day{background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden;}
+  .semana-day.hoy{border-color:var(--ink); border-width:1.5px;}
+  .semana-day-head{
+    padding:8px 12px; background:var(--paper);
+    display:flex; justify-content:space-between; align-items:baseline;
+  }
+  .semana-day-head .nombre{font-family:'IBM Plex Mono', monospace; font-size:11px; font-weight:600; letter-spacing:.05em; text-transform:uppercase;}
+  .semana-day-head .fecha{font-family:'IBM Plex Mono', monospace; font-size:10px; color:var(--ink-faint);}
+  .semana-day-body{padding:4px 12px 10px;}
+  .semana-item{display:flex; gap:7px; align-items:baseline; padding:5px 0; border-top:1px solid var(--paper-line); font-size:12.5px;}
+  .semana-item:first-child{border-top:none;}
+  .semana-tag{
+    font-family:'IBM Plex Mono', monospace; font-size:9px; font-weight:600;
+    padding:2px 6px; border-radius:9px; white-space:nowrap;
+  }
+  .semana-empty{font-size:11.5px; color:var(--ink-faint); font-style:italic; padding:5px 0;}
+
+  /* ---- Tareas tab ---- */
+  .tarea-form{display:flex; flex-direction:column; gap:7px; margin-bottom:14px;}
+  .tarea-form input[type=text]{
+    font-family:'IBM Plex Sans', sans-serif; font-size:13px;
+    padding:9px 11px; border:1px solid var(--line); border-radius:8px;
+    background:var(--card); color:var(--ink); width:100%;
+  }
+  .tarea-form-row{display:flex; gap:6px; flex-wrap:wrap;}
+  .tarea-form select{
+    font-family:'IBM Plex Mono', monospace; font-size:11px;
+    padding:8px 6px; border:1px solid var(--line); border-radius:8px;
+    background:var(--card); color:var(--ink); flex:1; min-width:88px;
+  }
+  .tarea-form button{
+    font-family:'Space Grotesk', sans-serif; font-size:13px; font-weight:600;
+    padding:8px 16px; border:none; border-radius:8px;
+    background:var(--ink); color:#fff; cursor:pointer; white-space:nowrap;
+  }
+  .filtros-row{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; align-items:center;}
+  .filtros-row select{
+    font-family:'IBM Plex Mono', monospace; font-size:10.5px;
+    padding:6px 8px; border:1px solid var(--line); border-radius:8px;
+    background:var(--card); color:var(--ink-soft);
+  }
+  .vista-btns{display:flex; gap:4px; margin-left:auto;}
+  .vista-btn{
+    font-family:'IBM Plex Mono', monospace; font-size:10px;
+    padding:6px 10px; border-radius:8px; border:1px solid var(--line);
+    background:var(--card); color:var(--ink-soft); cursor:pointer;
+  }
+  .vista-btn.active{background:var(--ink); color:#fff; border-color:var(--ink);}
+
+  .tareas-list{display:flex; flex-direction:column; background:var(--card); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden;}
+  .tarea{
+    display:flex; align-items:center; gap:8px;
+    padding:10px 12px;
+    border-top:1px solid var(--paper-line);
+  }
+  .tarea:first-child{border-top:none;}
+  .tarea input[type=checkbox]{
+    appearance:none; -webkit-appearance:none;
+    width:16px; height:16px; min-width:16px;
+    border:1.5px solid var(--line); border-radius:4px;
+    cursor:pointer; position:relative; background:#fff;
+  }
+  .tarea input[type=checkbox]:checked{background:var(--ink); border-color:var(--ink);}
+  .tarea input[type=checkbox]:checked::after{
+    content:""; position:absolute; left:4px; top:1px;
+    width:4px; height:8px; border:solid white; border-width:0 2px 2px 0;
+    transform:rotate(45deg);
+  }
+  .tarea-tags{display:flex; gap:4px; flex-wrap:wrap;}
+  .tarea-tag{
+    font-family:'IBM Plex Mono', monospace; font-size:9px; font-weight:600;
+    padding:2px 7px; border-radius:20px; white-space:nowrap;
+  }
+  .tarea-tag.tipo{background:#ECEAE3; color:var(--ink-soft);}
+  .tarea-tag.dia{background:#fff; color:var(--ink-faint); border:1px solid var(--line);}
+  .tarea-txt{flex:1; font-size:13px; color:var(--ink); min-width:120px;}
+  .tarea.done .tarea-txt{color:var(--ink-faint); text-decoration:line-through;}
+  .tarea-del{background:none; border:none; color:var(--ink-faint); font-size:16px; cursor:pointer; padding:2px 4px; line-height:1;}
+  .tareas-empty{font-size:12px; color:var(--ink-faint); padding:14px 12px; text-align:center;}
+  .tareas-footer{display:flex; justify-content:flex-end; margin-top:8px;}
+  .tareas-footer button{background:none; border:none; font-family:'IBM Plex Mono', monospace; font-size:10.5px; color:var(--ink-faint); cursor:pointer; text-decoration:underline;}
+
+  /* ---- Estudio tab ---- */
+  .timer-box{
+    background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:16px; margin-bottom:16px; text-align:center;
+  }
+  .timer-display{
+    font-family:'IBM Plex Mono', monospace; font-size:32px; font-weight:600;
+    margin:6px 0 12px; letter-spacing:.02em;
+  }
+  .timer-display.off{color:var(--ink-faint);}
+  .timer-selects{display:flex; gap:6px; flex-wrap:wrap; justify-content:center; margin-bottom:10px;}
+  .timer-selects select{
+    font-family:'IBM Plex Mono', monospace; font-size:11px;
+    padding:8px 8px; border:1px solid var(--line); border-radius:8px;
+    background:var(--paper); color:var(--ink);
+  }
+  .timer-btn{
+    font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:14px;
+    padding:10px 22px; border:none; border-radius:9px; cursor:pointer;
+  }
+  .timer-btn.start{background:var(--ink); color:#fff;}
+  .timer-btn.stop{background:var(--bad); color:#fff;}
+
+  .manual-form{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:14px 16px; margin-bottom:16px;}
+  .manual-form .fila{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px;}
+  .manual-form label{
+    font-family:'IBM Plex Mono', monospace; font-size:9px; color:var(--ink-faint);
+    text-transform:uppercase; letter-spacing:.05em; display:block; margin-bottom:3px;
+  }
+  .manual-form .campo{flex:1; min-width:100px;}
+  .manual-form input, .manual-form select{
+    width:100%; font-family:'IBM Plex Sans', sans-serif; font-size:12.5px;
+    padding:7px 8px; border:1px solid var(--line); border-radius:7px;
+    background:var(--paper); color:var(--ink);
+  }
+  .manual-form button{
+    font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:13px;
+    padding:9px 16px; border:none; border-radius:8px;
+    background:var(--ink); color:#fff; cursor:pointer; width:100%; margin-top:4px;
+  }
+
+  .resumen-semana{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:14px 16px; margin-bottom:16px;}
+  .barra-materia{margin-bottom:10px;}
+  .barra-materia:last-child{margin-bottom:0;}
+  .barra-materia-top{display:flex; justify-content:space-between; font-size:11.5px; margin-bottom:4px;}
+  .barra-materia-top b{font-family:'IBM Plex Mono', monospace;}
+  .barra-track{height:8px; background:var(--paper); border-radius:4px; overflow:hidden;}
+  .barra-fill{height:100%; border-radius:4px;}
+  .resumen-nota{font-size:11.5px; color:var(--ink-soft); margin-top:10px; padding-top:10px; border-top:1px dashed var(--line);}
+
+  .log-list{display:flex; flex-direction:column; background:var(--card); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden;}
+  .log-item{padding:9px 12px; border-top:1px solid var(--paper-line); font-size:12px;}
+  .log-item:first-child{border-top:none;}
+  .log-item-top{display:flex; justify-content:space-between; gap:8px;}
+  .log-item .dur{font-family:'IBM Plex Mono', monospace; font-weight:600; white-space:nowrap;}
+  .log-item .meta{color:var(--ink-soft); margin-top:2px;}
+  .log-del{background:none; border:none; color:var(--ink-faint); font-size:14px; cursor:pointer; padding:0 4px;}
+  .log-empty{font-size:12px; color:var(--ink-faint); padding:14px 12px; text-align:center;}
+
+  .clave-overlay{
+    position:fixed; inset:0; background:var(--paper);
+    display:flex; align-items:center; justify-content:center;
+    flex-direction:column; gap:14px; padding:24px; z-index:999; text-align:center;
+  }
+  .clave-overlay input{
+    font-family:'IBM Plex Mono', monospace; font-size:16px;
+    padding:12px 14px; border:1.5px solid var(--line); border-radius:9px;
+    width:100%; max-width:280px; text-align:center;
+  }
+  .clave-overlay button{
+    font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:14px;
+    padding:11px 24px; border:none; border-radius:9px;
+    background:var(--ink); color:#fff; cursor:pointer;
+  }
+  .clave-overlay p{font-size:12.5px; color:var(--ink-soft); max-width:320px; margin:0;}
+  .clave-overlay.oculto{display:none;}
+
+  footer{
+    margin-top:26px; font-size:11px; color:var(--ink-faint);
+    text-align:center; font-family:'IBM Plex Mono', monospace;
+  }
+</style>
+</head>
+<body>
+<div class="clave-overlay" id="claveOverlay">
+  <h1 style="font-family:'Space Grotesk',sans-serif;font-size:20px;margin:0;">Tu clave de sincronización</h1>
+  <p>Elegila una sola vez. Usá la misma clave en todos tus dispositivos (compu, iPhone) para ver los mismos datos en todos lados. Guardala en un lugar seguro — no hay forma de recuperarla.</p>
+  <input type="text" id="claveInput" placeholder="Ej: unaClaveSoloMia2026" autocomplete="off">
+  <button type="button" id="claveBtn">Entrar</button>
+</div>
+
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow"><span id="semanaLabel">SEMANA — / 15</span><span id="hoyLabel">—</span></div>
+    <h1>Mi Cuatrimestre</h1>
+    <p class="sub">Una sola herramienta: qué toca esta semana, cómo vas por materia, qué tenés que hacer y cuánto estudiaste.</p>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="semana">Semana</button>
+    <button class="tab-btn" data-tab="progreso">Progreso</button>
+    <button class="tab-btn" data-tab="tareas">Tareas</button>
+    <button class="tab-btn" data-tab="estudio">Estudio</button>
+  </nav>
+
+  <!-- ============ TAB: SEMANA ============ -->
+  <section class="tab-panel active" id="tab-semana">
+    <div class="mini-row" id="miniRow"></div>
+    <h2 class="section-title">Esta semana, día por día</h2>
+    <div class="semana-grid" id="semanaGrid"></div>
+  </section>
+
+  <!-- ============ TAB: PROGRESO ============ -->
+  <section class="tab-panel" id="tab-progreso">
+    <div class="overall" id="overallBox">
+      <div class="num" id="overallNum">—<span>% real</span></div>
+      <div class="desc" id="overallDesc">Cargando estado general…</div>
+    </div>
+    <div class="grid" id="grid" style="display:flex;flex-direction:column;gap:14px;"></div>
+  </section>
+
+  <!-- ============ TAB: TAREAS ============ -->
+  <section class="tab-panel" id="tab-tareas">
+    <div class="tarea-form">
+      <input type="text" id="tareaInput" placeholder="Ej: TP2 Electro — terminar la mitad de la práctica">
+      <div class="tarea-form-row">
+        <select id="tareaMateria">
+          <option value="general">General</option>
+          <option value="ou">OU</option>
+          <option value="cmi">CMI</option>
+          <option value="et">ET</option>
+          <option value="em">EM</option>
+        </select>
+        <select id="tareaTipo"></select>
+        <select id="tareaDia"><option value="">Sin día</option></select>
+        <button type="button" id="tareaAdd">Agregar</button>
+      </div>
+    </div>
+
+    <div class="filtros-row">
+      <select id="filtroMateria">
+        <option value="todas">Todas las materias</option>
+        <option value="ou">OU</option>
+        <option value="cmi">CMI</option>
+        <option value="et">ET</option>
+        <option value="em">EM</option>
+        <option value="general">General</option>
+      </select>
+      <select id="filtroTipo"><option value="todas">Todos los tipos</option></select>
+      <div class="vista-btns">
+        <button type="button" class="vista-btn active" data-vista="lista">Lista</button>
+        <button type="button" class="vista-btn" data-vista="semana">Semana</button>
+      </div>
+    </div>
+
+    <div id="tareasContenedor"></div>
+    <div class="tareas-footer"><button type="button" id="limpiarHechas">Vaciar hechas</button></div>
+  </section>
+
+  <!-- ============ TAB: ESTUDIO ============ -->
+  <section class="tab-panel" id="tab-estudio">
+    <div class="timer-box">
+      <div class="timer-selects">
+        <select id="timerMateria"></select>
+        <select id="timerTema"></select>
+        <select id="timerTipo"></select>
+      </div>
+      <div class="timer-display off" id="timerDisplay">00:00:00</div>
+      <button type="button" class="timer-btn start" id="timerBtn">Iniciar</button>
+    </div>
+
+    <div class="manual-form">
+      <h2 class="section-title" style="margin-bottom:10px;">Cargar sesión manual</h2>
+      <div class="fila">
+        <div class="campo"><label>Fecha</label><input type="date" id="manFecha"></div>
+        <div class="campo"><label>Inicio</label><input type="time" id="manInicio"></div>
+        <div class="campo"><label>Fin</label><input type="time" id="manFin"></div>
+      </div>
+      <div class="fila">
+        <div class="campo"><label>Materia</label><select id="manMateria"></select></div>
+        <div class="campo"><label>Unidad / tema</label><select id="manTema"></select></div>
+      </div>
+      <div class="fila">
+        <div class="campo"><label>Tipo de tarea</label><select id="manTipo"></select></div>
+      </div>
+      <button type="button" id="manAdd">Guardar sesión</button>
+    </div>
+
+    <h2 class="section-title">Esta semana por materia</h2>
+    <div class="resumen-semana" id="resumenSemana"></div>
+
+    <h2 class="section-title">Historial</h2>
+    <div class="log-list" id="logList"></div>
+  </section>
+
+  <footer>Todo se guarda en este dispositivo. Es tuyo — actualizalo cuando quieras.</footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* =======================================================================
+   SUPABASE — PEGÁ ACÁ TU URL Y TU CLAVE "anon public"
+   (Supabase → Project Settings → API)
+   ======================================================================= */
+const SUPABASE_URL = "https://gelgeuewunkibysbndoq.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdlbGdldWV3dW5raWJ5c2JuZG9xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODczNTc0MTEsImV4cCI6MjEwMjkzMzQxMX0.YWVAsYCwgnxmai6LfGX5oPTpMi6OKStcdK9Fnpk89EU";
+
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* ---- Clave de sincronización (se guarda en este navegador con localStorage,
+   que SÍ funciona al abrir el archivo suelto o como página web — a diferencia
+   de window.storage, que solo existe dentro de Claude) ---- */
+let CLAVE = localStorage.getItem('cuatrimestre-clave') || '';
+let CACHE = {}; // todo el registro cargado una sola vez al entrar
+
+async function iniciarAlmacen(){
+  const overlay = document.getElementById('claveOverlay');
+  if(!CLAVE){
+    overlay.classList.remove('oculto');
+    await new Promise(resolve => {
+      document.getElementById('claveBtn').addEventListener('click', () => {
+        const v = document.getElementById('claveInput').value.trim();
+        if(!v) return;
+        CLAVE = v;
+        localStorage.setItem('cuatrimestre-clave', v);
+        resolve();
+      });
+    });
+  }
+  overlay.classList.add('oculto');
+  try{
+    const { data, error } = await supabaseClient
+      .from('panel_cuatrimestre')
+      .select('datos')
+      .eq('id', CLAVE)
+      .maybeSingle();
+    if(error) throw error;
+    CACHE = (data && data.datos) ? data.datos : {};
+  }catch(e){
+    console.error('No se pudo conectar a Supabase (revisá SUPABASE_URL / SUPABASE_ANON_KEY y la tabla):', e);
+    CACHE = {};
+  }
+}
+
+async function guardarDocumentoCompleto(){
+  const { error } = await supabaseClient
+    .from('panel_cuatrimestre')
+    .upsert({ id: CLAVE, datos: CACHE, updated_at: new Date().toISOString() });
+  if(error) throw error;
+}
+
+// Reemplaza a window.storage.get: lee del caché en memoria (ya cargado al entrar).
+const Almacen = {
+  async leer(campo){
+    return CACHE[campo] !== undefined ? {value: CACHE[campo]} : null;
+  },
+  async guardar(campo, valorString){
+    CACHE[campo] = valorString;
+    try{
+      await guardarDocumentoCompleto();
+    }catch(e){
+      console.error(`No se pudo guardar "${campo}" en Supabase:`, e);
+    }
+  },
+  async borrar(campo){
+    delete CACHE[campo];
+    try{
+      await guardarDocumentoCompleto();
+    }catch(e){ /* si el campo no existía, no pasa nada */ }
+  }
+};
+
+/* ======================================================================= */
+
+/* =======================================================================
+   DATOS BASE (materias, temas/subtemas, hitos)
+   ======================================================================= */
+const MATERIAS = [
+  {
+    id:'ou', nombre:'Operaciones Unitarias', corto:'OU',
+    tint:'#FDEAD8', strong:'#C06A1E',
+    temas:[
+      {id:'ou-1', fecha:'2026-08-26', nombre:'Unidad 1 — Balances y transferencia de calor', subtemas:[
+        {id:'balances', nombre:'Balances', fecha:'2026-08-05'},
+        {id:'conduccion', nombre:'Conducción', fecha:'2026-08-05'},
+        {id:'conveccion', nombre:'Convección e intercambiadores', fecha:'2026-08-12'},
+        {id:'radiacion', nombre:'Radiación', fecha:'2026-08-19'},
+      ]},
+      {id:'ou-2', fecha:'2026-09-09', nombre:'Unidad 2 — Generadores de vapor y hornos', subtemas:[
+        {id:'gvapor', nombre:'Generadores de vapor', fecha:'2026-08-19'},
+        {id:'hornos', nombre:'Hornos', fecha:'2026-08-26'},
+      ]},
+      {id:'ou-3', fecha:'2026-09-23', nombre:'Unidad 3 — Propiedades de mezclas y fraccionamiento', subtemas:[
+        {id:'propmezclas', nombre:'Propiedades de mezclas', fecha:'2026-09-02'},
+        {id:'fraccionamiento', nombre:'Fraccionamiento y métodos de cálculo', fecha:'2026-09-09'},
+      ]},
+      {id:'ou-4', fecha:'2026-10-14', nombre:'Unidad 4 — Adsorción, intercambio iónico, absorción, extracción', subtemas:[
+        {id:'adsorcion', nombre:'Adsorción', fecha:'2026-09-16'},
+        {id:'intercambioionico', nombre:'Intercambio iónico', fecha:'2026-09-23'},
+        {id:'absorcion', nombre:'Absorción', fecha:'2026-09-30'},
+        {id:'extraccionll', nombre:'Extracción líquido-líquido', fecha:'2026-09-30'},
+      ]},
+      {id:'ou-5', fecha:'2026-10-21', nombre:'Unidad 5 — Humidificación-secado, evaporación, cristalización', subtemas:[
+        {id:'humidsecado', nombre:'Humidificación-secado', fecha:'2026-10-07'},
+        {id:'evaporacion', nombre:'Evaporación', fecha:'2026-10-14'},
+        {id:'cristalizacion', nombre:'Cristalización', fecha:'2026-10-14'},
+      ]},
+      {id:'ou-6', fecha:'2026-11-04', nombre:'Unidad 6 — Separación de fases y fluidización', subtemas:[
+        {id:'separfases', nombre:'Separación de fases (MF, molienda, tamizado)', fecha:'2026-10-21'},
+        {id:'fluidizacion', nombre:'Fluidización', fecha:'2026-10-28'},
+      ]},
+    ],
+    hitos:[
+      {fecha:'2026-08-14', texto:'Entrega TP N°1 y N°2'},
+      {fecha:'2026-08-21', texto:'Entrega TP N°3'},
+      {fecha:'2026-08-26', texto:'Evaluación Unidad 1'},
+      {fecha:'2026-08-28', texto:'Entrega TP N°4'},
+      {fecha:'2026-09-04', texto:'Entrega TP N°5'},
+      {fecha:'2026-09-09', texto:'Evaluación Unidad 2'},
+      {fecha:'2026-09-11', texto:'Entrega TP N°6'},
+      {fecha:'2026-09-18', texto:'Entrega TP N°7'},
+      {fecha:'2026-09-23', texto:'Evaluación Unidad 3'},
+      {fecha:'2026-09-25', texto:'Entrega TP N°8'},
+      {fecha:'2026-10-09', texto:'Entrega TP N°9 y N°10'},
+      {fecha:'2026-10-14', texto:'Evaluación Unidad 4'},
+      {fecha:'2026-10-16', texto:'Entrega TP N°11 y N°12'},
+      {fecha:'2026-10-21', texto:'Evaluación Unidad 5'},
+      {fecha:'2026-10-23', texto:'Entrega TP N°13'},
+      {fecha:'2026-11-04', texto:'Evaluación Unidad 6'},
+      {fecha:'2026-11-06', texto:'Entrega TP N°14'},
+      {fecha:'2026-11-11', texto:'Global integrador individual'},
+    ]
+  },
+  {
+    id:'cmi', nombre:'Construcciones y Montajes Industriales', corto:'CMI',
+    tint:'#EDE5F7', strong:'#7C5CAE',
+    temas:[
+      {id:'cmi-1', fecha:'2026-08-03', nombre:'Arquitectura Industrial'},
+      {id:'cmi-2', fecha:'2026-08-10', nombre:'Movimientos de Suelos'},
+      {id:'cmi-3', fecha:'2026-08-24', nombre:'Acciones sobre las Estructuras — Naves Industriales'},
+      {id:'cmi-4', fecha:'2026-08-31', nombre:'Construcciones de Hormigón Armado'},
+      {id:'cmi-5', fecha:'2026-09-07', nombre:'Construcciones de Hormigón Armado (cont.)'},
+      {id:'cmi-6', fecha:'2026-09-14', nombre:'Construcciones de Madera'},
+      {id:'cmi-7', fecha:'2026-09-28', nombre:'Construcciones Metálicas'},
+      {id:'cmi-8', fecha:'2026-10-05', nombre:'Mecánica de Suelos — Cimentaciones'},
+      {id:'cmi-9', fecha:'2026-10-19', nombre:'Calefacción y Aire Acondicionado'},
+      {id:'cmi-10', fecha:'2026-10-26', nombre:'Instalaciones Sanitarias — Efluentes Industriales'},
+      {id:'cmi-11', fecha:'2026-11-02', nombre:'Montajes Industriales'},
+      {id:'cmi-12', fecha:'2026-11-09', nombre:'Planeamiento Gral. de Edificios Industriales'},
+    ],
+    hitos:[
+      {fecha:'2026-08-10', texto:'Entrega TP + Evaluación: Arquitectura Industrial'},
+      {fecha:'2026-08-24', texto:'Entrega TP + Evaluación: Movimientos de Suelos'},
+      {fecha:'2026-08-31', texto:'Entrega TP + Evaluación: Acciones sobre las Estructuras'},
+      {fecha:'2026-09-07', texto:'Evaluación: Hormigón Armado'},
+      {fecha:'2026-09-14', texto:'Entrega TP + Evaluación: Hormigón Armado (cont.)'},
+      {fecha:'2026-09-28', texto:'Entrega TP + Evaluación: Construcciones de Madera'},
+      {fecha:'2026-10-05', texto:'Entrega TP + Evaluación: Construcciones Metálicas'},
+      {fecha:'2026-10-19', texto:'Entrega TP + Evaluación: Mecánica de Suelos'},
+      {fecha:'2026-10-26', texto:'Entrega TP + Evaluación: Calefacción y AA'},
+      {fecha:'2026-11-02', texto:'Entrega TP (x2) + Evaluación: Instalaciones Sanitarias / Montajes'},
+      {fecha:'2026-11-09', texto:'Evaluación final: Planeamiento Gral.'},
+    ]
+  },
+  {
+    id:'et', nombre:'Electrotecnia', corto:'ET',
+    tint:'#E3F3FA', strong:'#2E86AB',
+    temas:[
+      {id:'et-1', fecha:'2026-08-04', nombre:'Circuitos Magnéticos'},
+      {id:'et-2', fecha:'2026-08-07', nombre:'Corriente Alterna Monofásica'},
+      {id:'et-3', fecha:'2026-08-18', nombre:'Corriente Alterna Trifásica'},
+      {id:'et-4', fecha:'2026-09-01', nombre:'Transformadores'},
+      {id:'et-5', fecha:'2026-09-22', nombre:'Generadores de Corriente Continua'},
+      {id:'et-6', fecha:'2026-10-06', nombre:'Motor de Corriente Continua'},
+      {id:'et-7', fecha:'2026-10-13', nombre:'Máquina Síncrona'},
+      {id:'et-8', fecha:'2026-10-23', nombre:'Máquina Asíncrona'},
+      {id:'et-9', fecha:'2026-11-10', nombre:'Aislación'},
+    ],
+    hitos:[
+      {fecha:'2026-09-15', texto:'1ª Evaluación Parcial (TPG 1-4 / TPL 1-5)'},
+      {fecha:'2026-09-29', texto:'1er Recuperatorio parcial'},
+      {fecha:'2026-10-27', texto:'2ª Evaluación Parcial (TPG 5-7 / TPL 5-9)'},
+      {fecha:'2026-11-03', texto:'2do Recuperatorio parcial'},
+      {fecha:'2026-11-10', texto:'Global'},
+    ]
+  },
+  {
+    id:'em', nombre:'Elementos de Máquinas', corto:'EM',
+    tint:'#FCE3EC', strong:'#D6567F',
+    temas:[
+      {id:'em-1', fecha:'2026-08-04', nombre:'Acoplamientos Permanentes'},
+      {id:'em-2', fecha:'2026-08-11', nombre:'Acoplamientos Temporarios'},
+      {id:'em-3', fecha:'2026-08-18', nombre:'Transmisiones por Correas'},
+      {id:'em-4', fecha:'2026-08-25', nombre:'Transmisiones por Cadenas'},
+      {id:'em-5', fecha:'2026-09-01', nombre:'Engranajes'},
+      {id:'em-6', fecha:'2026-09-08', nombre:'Fatiga'},
+      {id:'em-7', fecha:'2026-09-15', nombre:'Árboles y Ejes'},
+      {id:'em-8', fecha:'2026-09-22', nombre:'Rodamientos'},
+      {id:'em-9', fecha:'2026-09-29', nombre:'Acoplamientos No Convencionales'},
+      {id:'em-10', fecha:'2026-10-06', nombre:'Vibraciones y Balanceo'},
+      {id:'em-11', fecha:'2026-10-13', nombre:'Circuitos Neumáticos'},
+      {id:'em-12', fecha:'2026-10-20', nombre:'Aplicaciones'},
+    ],
+    hitos:[
+      {fecha:'2026-08-11', texto:'Entrega TP N°1'},
+      {fecha:'2026-08-18', texto:'Entrega TP N°2'},
+      {fecha:'2026-08-25', texto:'Entrega TP N°3'},
+      {fecha:'2026-09-01', texto:'Entrega TP N°4'},
+      {fecha:'2026-09-08', texto:'Entrega TP N°5'},
+      {fecha:'2026-09-15', texto:'Entrega TP N°6'},
+      {fecha:'2026-09-22', texto:'Entrega TP N°7'},
+      {fecha:'2026-09-29', texto:'Entrega TP N°8'},
+      {fecha:'2026-10-06', texto:'Entrega TP N°9'},
+      {fecha:'2026-10-13', texto:'Entrega TP N°10'},
+      {fecha:'2026-10-20', texto:'Entrega TP N°11'},
+      {fecha:'2026-10-27', texto:'Entrega TP N°12'},
+    ]
+  },
+];
+
+const MATERIA_POR_ID = Object.fromEntries(MATERIAS.map(m => [m.id, m]));
+const GENERAL_COLOR = {tint:'#ECEAE3', strong:'#5B584F'};
+function colorMateria(id){
+  return MATERIA_POR_ID[id] ? {tint:MATERIA_POR_ID[id].tint, strong:MATERIA_POR_ID[id].strong} : GENERAL_COLOR;
+}
+function nombreCortoMateria(id){
+  return MATERIA_POR_ID[id] ? MATERIA_POR_ID[id].corto : 'GRAL';
+}
+
+const TIPOS_TAREA = [
+  {key:'tp', label:'TP'},
+  {key:'estudio', label:'Estudio'},
+  {key:'resumen', label:'Resumen'},
+  {key:'personal', label:'Personal'},
+  {key:'otro', label:'Otro'},
+];
+const TIPOS_ESTUDIO = [
+  {key:'teorica', label:'Teórica'},
+  {key:'resumen', label:'Resumen'},
+  {key:'demostraciones', label:'Demostraciones'},
+  {key:'practica', label:'Práctica'},
+  {key:'otro', label:'Otro'},
+];
+const DIAS = [
+  {key:'lunes', label:'Lunes'},
+  {key:'martes', label:'Martes'},
+  {key:'miercoles', label:'Miércoles'},
+  {key:'jueves', label:'Jueves'},
+  {key:'viernes', label:'Viernes'},
+  {key:'sabado', label:'Sábado'},
+  {key:'domingo', label:'Domingo'},
+];
+
+const SEM_INICIO = new Date('2026-08-03T00:00:00');
+const HOY = new Date();
+
+function fmtDate(d){ return d.toLocaleDateString('es-AR', {day:'numeric', month:'short'}).replace('.',''); }
+function mismoDia(a,b){ return a.toDateString() === b.toDateString(); }
+
+function semanaActual(){
+  const diff = Math.floor((HOY - SEM_INICIO) / (1000*60*60*24*7)) + 1;
+  return Math.min(Math.max(diff,1),15);
+}
+document.getElementById('semanaLabel').textContent = `SEMANA ${semanaActual()} / 15`;
+document.getElementById('hoyLabel').textContent = HOY.toLocaleDateString('es-AR', {weekday:'long', day:'numeric', month:'long'});
+
+function inicioSemanaActual(){
+  const d = new Date(HOY);
+  const dia = d.getDay(); // 0=domingo
+  const diff = (dia === 0 ? -6 : 1 - dia);
+  d.setDate(d.getDate() + diff);
+  d.setHours(0,0,0,0);
+  return d;
+}
+
+/* =======================================================================
+   TABS
+   ======================================================================= */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* =======================================================================
+   PROGRESO (temas / subtemas con chips de 3 estados)
+   ======================================================================= */
+function expectedPesoTema(t){
+  if(t.subtemas) return t.subtemas.filter(s => new Date(s.fecha+'T00:00:00') <= HOY).length;
+  return new Date(t.fecha+'T00:00:00') <= HOY ? 3 : 0;
+}
+function expectedPct(m){
+  const total = m.temas.reduce((acc, t) => acc + (t.subtemas ? t.subtemas.length : 3), 0);
+  const done = m.temas.reduce((acc, t) => acc + expectedPesoTema(t), 0);
+  return Math.round((done/total)*100);
+}
+function nextHito(hitos){
+  const futuros = hitos.filter(h => new Date(h.fecha+'T00:00:00') >= HOY);
+  return futuros.length ? futuros[0] : null;
+}
+
+const ETAPAS = [
+  {key:'clase', label:'Clase / vi el tema'},
+  {key:'resumen', label:'Resumen / estudiado'},
+  {key:'practica', label:'Práctica hecha'},
+];
+const CICLO = ['no', 'empezado', 'hecho'];
+const PESO = {no:0, empezado:0.5, hecho:1};
+
+async function getChecked(id){
+  try{
+    const r = await Almacen.leer(`progreso-${id}`);
+    return r ? JSON.parse(r.value) : {};
+  }catch(e){ return {}; }
+}
+function setChecked(id, obj){
+  try{
+    Almacen.guardar(`progreso-${id}`, JSON.stringify(obj)).catch(e => console.error('No se pudo guardar progreso:', e));
+  }catch(e){ console.error('Almacen no disponible:', e); }
+}
+function etapasDe(state, temaId){ return state[temaId] || {clase:'no', resumen:'no', practica:'no'}; }
+function subestadoDe(state, temaId){ return (state[temaId] && state[temaId].sub) || {}; }
+function maxPesoTema(t){ return t.subtemas ? t.subtemas.length : 3; }
+function pesoTema(state, t){
+  if(t.subtemas){
+    const sub = subestadoDe(state, t.id);
+    return t.subtemas.reduce((acc, s) => acc + PESO[sub[s.id] || 'no'], 0);
+  }
+  const e = etapasDe(state, t.id);
+  return PESO[e.clase] + PESO[e.resumen] + PESO[e.practica];
+}
+function statusFor(actual, expected){
+  const delta = actual - expected;
+  if(delta >= 8) return {cls:'good', label:'Adelantada'};
+  if(delta <= -8) return {cls:'bad', label:'Atrasada'};
+  return {cls:'warn', label:'Al día'};
+}
+
+const STATE = {};
+function totalPeso(m){ return m.temas.reduce((acc, t) => acc + maxPesoTema(t), 0); }
+function contarHecho(m){
+  const state = STATE[m.id];
+  return m.temas.reduce((acc, t) => acc + pesoTema(state, t), 0);
+}
+
+function updateCard(card, m){
+  const total = totalPeso(m);
+  const done = contarHecho(m);
+  const exp = expectedPct(m);
+  const act = Math.round((done/total) * 100);
+  const st = statusFor(act, exp);
+  const badge = card.querySelector('.badge');
+  badge.className = `badge ${st.cls}`;
+  badge.textContent = st.label;
+  card.querySelector('.track-fill').style.width = act + '%';
+  const numSpans = card.querySelectorAll('.track-nums b');
+  numSpans[0].textContent = act + '%';
+  numSpans[1].textContent = exp + '%';
+  card.querySelector('.card-code').textContent = `${m.corto} · ${done}/${total} partes al día`;
+  updateOverall();
+  renderMiniRow();
+}
+
+function updateOverall(){
+  let sumActual = 0, sumExpected = 0;
+  for(const m of MATERIAS){
+    sumActual += Math.round((contarHecho(m) / totalPeso(m)) * 100);
+    sumExpected += expectedPct(m);
+  }
+  const avgActual = Math.round(sumActual / MATERIAS.length);
+  const avgExpected = Math.round(sumExpected / MATERIAS.length);
+  const overallSt = statusFor(avgActual, avgExpected);
+  const numEl = document.getElementById('overallNum');
+  const descEl = document.getElementById('overallDesc');
+  if(numEl) numEl.innerHTML = `${avgActual}<span>% real</span>`;
+  if(descEl) descEl.innerHTML = `Esperado a esta altura: <b>${avgExpected}%</b>. En promedio estás <b style="color:${overallSt.cls==='good'?'var(--good)':overallSt.cls==='bad'?'var(--bad)':'var(--warn)'}">${overallSt.label.toLowerCase()}</b>.`;
+}
+
+async function buildProgreso(){
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  for(const m of MATERIAS){ STATE[m.id] = await getChecked(m.id); }
+
+  for(const m of MATERIAS){
+    const total = totalPeso(m);
+    const done = contarHecho(m);
+    const exp = expectedPct(m);
+    const act = Math.round((done/total) * 100);
+    const st = statusFor(act, exp);
+    const nh = nextHito(m.hitos);
+
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.cssText = 'background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;';
+    card.style.setProperty('--tint', m.tint);
+    card.style.setProperty('--strong', m.strong);
+
+    card.innerHTML = `
+      <div class="card-head" style="padding:14px 16px 12px;background:var(--tint);border-bottom:1px solid var(--line);">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+          <div>
+            <p class="card-title" style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:16.5px;line-height:1.25;color:var(--strong);margin:0;">${m.nombre}</p>
+            <span class="card-code" style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.08em;color:var(--strong);opacity:.75;">${m.corto} · ${done}/${total} partes al día</span>
+          </div>
+          <span class="badge ${st.cls}">${st.label}</span>
+        </div>
+        <div style="margin-top:14px;">
+          <div class="track" style="position:relative;height:22px;background:repeating-linear-gradient(90deg,rgba(0,0,0,.06) 0 1px,transparent 1px 10%);background-color:rgba(255,255,255,.6);border:1px solid var(--line);border-radius:6px;">
+            <div class="track-fill" style="position:absolute;top:0;left:0;bottom:0;background:var(--strong);border-radius:5px 0 0 5px;width:${act}%;"></div>
+            <div class="track-today" style="position:absolute;top:-4px;bottom:-4px;width:0;border-left:2px dashed var(--ink);opacity:.55;left:${exp}%;"></div>
+          </div>
+          <div class="track-nums" style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);margin-top:16px;"><span>Real: <b>${act}%</b></span><span>Esperado: <b>${exp}%</b></span></div>
+        </div>
+        ${nh ? `<div class="next" style="margin-top:12px;font-size:12px;color:var(--ink-soft);display:flex;gap:6px;">→ <b>${fmtDate(new Date(nh.fecha+'T00:00:00'))}</b> <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--strong);">${nh.texto}</span></div>` : ''}
+      </div>
+      <button class="toggle" type="button" style="width:100%;background:transparent;border:none;border-top:1px solid var(--line);padding:10px 16px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);cursor:pointer;display:flex;justify-content:space-between;">
+        <span>Ver ${m.temas.length} temas</span><span class="chev">▾</span>
+      </button>
+      <div class="list"></div>
+    `;
+
+    const list = card.querySelector('.list');
+    m.temas.forEach(t => {
+      const maxT = maxPesoTema(t);
+      const nDone = pesoTema(STATE[m.id], t);
+      const isFuture = t.subtemas
+        ? t.subtemas.every(s => new Date(s.fecha+'T00:00:00') > HOY)
+        : new Date(t.fecha+'T00:00:00') > HOY;
+      const row = document.createElement('div');
+      row.className = `item ${nDone===maxT?'done':''} ${isFuture?'future':''}`;
+      const fechaLabel = t.subtemas ? `Evaluación ${fmtDate(new Date(t.fecha+'T00:00:00'))}` : fmtDate(new Date(t.fecha+'T00:00:00'));
+
+      const chipsHtml = t.subtemas
+        ? t.subtemas.map(s => {
+            const sub = subestadoDe(STATE[m.id], t.id);
+            const st2 = sub[s.id] || 'no';
+            const subFuture = new Date(s.fecha+'T00:00:00') > HOY;
+            return `<button type="button" class="chip ${st2} ${subFuture?'chip-future':''}" data-sub="${s.id}"><span class="dot"></span>${fmtDate(new Date(s.fecha+'T00:00:00'))} · ${s.nombre}</button>`;
+          }).join('')
+        : ETAPAS.map(et => {
+            const e = etapasDe(STATE[m.id], t.id);
+            return `<button type="button" class="chip ${e[et.key]}" data-etapa="${et.key}"><span class="dot"></span>${et.label}</button>`;
+          }).join('');
+
+      row.innerHTML = `
+        <div class="item-txt">
+          <span><span class="item-date">${fechaLabel}</span> <span class="item-name">${t.nombre}</span></span>
+          <span class="item-count">${nDone}/${maxT}</span>
+        </div>
+        <div class="chips">${chipsHtml}</div>
+      `;
+      row.querySelectorAll('.chip').forEach(chipEl => {
+        chipEl.addEventListener('click', () => {
+          if(!STATE[m.id][t.id]){
+            STATE[m.id][t.id] = t.subtemas ? {sub:{}} : {clase:'no', resumen:'no', practica:'no'};
+          }
+          if(t.subtemas){
+            const subId = chipEl.dataset.sub;
+            if(!STATE[m.id][t.id].sub) STATE[m.id][t.id].sub = {};
+            const actualEstado = STATE[m.id][t.id].sub[subId] || 'no';
+            const siguiente = CICLO[(CICLO.indexOf(actualEstado) + 1) % CICLO.length];
+            STATE[m.id][t.id].sub[subId] = siguiente;
+            chipEl.className = `chip ${siguiente}`;
+          }else{
+            const key = chipEl.dataset.etapa;
+            const actualEstado = STATE[m.id][t.id][key];
+            const siguiente = CICLO[(CICLO.indexOf(actualEstado) + 1) % CICLO.length];
+            STATE[m.id][t.id][key] = siguiente;
+            chipEl.className = `chip ${siguiente}`;
+          }
+          const nowDone = pesoTema(STATE[m.id], t);
+          row.querySelector('.item-count').textContent = `${nowDone}/${maxT}`;
+          row.classList.toggle('done', nowDone===maxT);
+          setChecked(m.id, STATE[m.id]);
+          updateCard(card, m);
+        });
+      });
+      list.appendChild(row);
+    });
+
+    card.querySelector('.toggle').addEventListener('click', () => card.classList.toggle('open'));
+    grid.appendChild(card);
+  }
+  updateOverall();
+}
+
+async function renderMiniRow(){
+  const row = document.getElementById('miniRow');
+  row.innerHTML = '';
+  for(const m of MATERIAS){
+    if(!STATE[m.id]) STATE[m.id] = await getChecked(m.id);
+    const total = totalPeso(m);
+    const done = contarHecho(m);
+    const exp = expectedPct(m);
+    const act = Math.round((done/total) * 100);
+    const st = statusFor(act, exp);
+    const card = document.createElement('div');
+    card.className = 'mini-card';
+    card.style.borderLeft = `3px solid ${m.strong}`;
+    card.innerHTML = `
+      <div class="mini-name">${m.corto}</div>
+      <div class="mini-pct">${act}%</div>
+      <span class="mini-badge ${st.cls}">${st.label}</span>
+    `;
+    row.appendChild(card);
+  }
+}
+
+/* =======================================================================
+   SEMANA (vista general del cronograma + progreso)
+   ======================================================================= */
+function itemsDeLaSemana(){
+  const lunes = inicioSemanaActual();
+  const domingo = new Date(lunes); domingo.setDate(domingo.getDate()+6); domingo.setHours(23,59,59,999);
+  const items = [];
+  MATERIAS.forEach(m => {
+    m.temas.forEach(t => {
+      if(t.subtemas){
+        t.subtemas.forEach(s => {
+          const f = new Date(s.fecha+'T00:00:00');
+          if(f >= lunes && f <= domingo) items.push({fecha:f, materia:m, texto:s.nombre, tipo:'clase'});
+        });
+      }else{
+        const f = new Date(t.fecha+'T00:00:00');
+        if(f >= lunes && f <= domingo) items.push({fecha:f, materia:m, texto:t.nombre, tipo:'clase'});
+      }
+    });
+    m.hitos.forEach(h => {
+      const f = new Date(h.fecha+'T00:00:00');
+      if(f >= lunes && f <= domingo) items.push({fecha:f, materia:m, texto:h.texto, tipo:'hito'});
+    });
+  });
+  return items;
+}
+
+async function buildSemana(){
+  await renderMiniRow();
+  const cont = document.getElementById('semanaGrid');
+  cont.innerHTML = '';
+  const lunes = inicioSemanaActual();
+  const items = itemsDeLaSemana();
+  const tareas = await cargarTareasRaw();
+
+  DIAS.forEach((d, idx) => {
+    const fecha = new Date(lunes); fecha.setDate(fecha.getDate() + idx);
+    const esHoy = mismoDia(fecha, HOY);
+    const box = document.createElement('div');
+    box.className = `semana-day ${esHoy?'hoy':''}`;
+    box.innerHTML = `
+      <div class="semana-day-head">
+        <span class="nombre">${d.label}${esHoy?' · hoy':''}</span>
+        <span class="fecha">${fmtDate(fecha)}</span>
+      </div>
+      <div class="semana-day-body"></div>
+    `;
+    const body = box.querySelector('.semana-day-body');
+    const itemsDia = items.filter(it => mismoDia(it.fecha, fecha)).sort((a,b) => a.materia.corto.localeCompare(b.materia.corto));
+    const tareasDia = tareas.filter(t => t.dia === d.key && !t.done);
+
+    if(itemsDia.length === 0 && tareasDia.length === 0){
+      body.innerHTML = '<div class="semana-empty">Sin nada cargado</div>';
+    }else{
+      itemsDia.forEach(it => {
+        const row = document.createElement('div');
+        row.className = 'semana-item';
+        row.innerHTML = `<span class="semana-tag" style="background:${it.materia.tint};color:${it.materia.strong}">${it.materia.corto}</span><span>${it.tipo==='hito'?'⚠ ':''}${it.texto}</span>`;
+        body.appendChild(row);
+      });
+      tareasDia.forEach(t => {
+        const col = colorMateria(t.materia);
+        const row = document.createElement('div');
+        row.className = 'semana-item';
+        row.innerHTML = `<span class="semana-tag" style="background:${col.tint};color:${col.strong}">TAREA</span><span>${t.texto}</span>`;
+        body.appendChild(row);
+      });
+    }
+    cont.appendChild(box);
+  });
+}
+
+/* =======================================================================
+   TAREAS
+   ======================================================================= */
+let TAREAS = [];
+let filtroMateria = 'todas';
+let filtroTipo = 'todas';
+let vistaTareas = 'lista';
+
+async function cargarTareasRaw(){
+  try{
+    const r = await Almacen.leer('tareas-sueltas');
+    return r ? JSON.parse(r.value) : [];
+  }catch(e){ return []; }
+}
+async function cargarTareas(){
+  const r = await cargarTareasRawConSeed();
+  TAREAS = r;
+}
+async function cargarTareasRawConSeed(){
+  try{
+    const r = await Almacen.leer('tareas-sueltas');
+    if(r) return JSON.parse(r.value).map(normalizarTarea);
+    const seed = [
+      {id:'seed1', texto:'TP2 Electro — terminar la mitad de la práctica', materia:'et', tipo:'tp', dia:'', done:false},
+      {id:'seed2', texto:'TP3 EM (correas) — hacer el punto propio, copiar el resto', materia:'em', tipo:'tp', dia:'', done:false},
+    ];
+    guardarTareas(seed);
+    return seed;
+  }catch(e){ return []; }
+}
+function normalizarTarea(t){
+  return {id:t.id, texto:t.texto, materia:t.materia||'general', tipo:t.tipo||'otro', dia:t.dia||'', done:!!t.done};
+}
+function guardarTareas(arr){
+  try{
+    Almacen.guardar('tareas-sueltas', JSON.stringify(arr || TAREAS)).catch(e => console.error('No se pudo guardar tareas:', e));
+  }catch(e){ console.error('Almacen no disponible:', e); }
+}
+
+function poblarSelect(sel, opciones, conVacio){
+  sel.innerHTML = (conVacio ? `<option value="todas">${conVacio}</option>` : '') +
+    opciones.map(o => `<option value="${o.key}">${o.label}</option>`).join('');
+}
+poblarSelect(document.getElementById('tareaTipo'), TIPOS_TAREA);
+document.getElementById('tareaDia').innerHTML += DIAS.map(d => `<option value="${d.key}">${d.label}</option>`).join('');
+poblarSelect(document.getElementById('filtroTipo'), TIPOS_TAREA, 'Todos los tipos');
+
+function tareaPasaFiltro(t){
+  if(filtroMateria !== 'todas' && t.materia !== filtroMateria) return false;
+  if(filtroTipo !== 'todas' && t.tipo !== filtroTipo) return false;
+  return true;
+}
+
+function renderTareas(){
+  const cont = document.getElementById('tareasContenedor');
+  cont.innerHTML = '';
+  const filtradas = TAREAS.filter(tareaPasaFiltro);
+
+  if(vistaTareas === 'lista'){
+    const listBox = document.createElement('div');
+    listBox.className = 'tareas-list';
+    if(filtradas.length === 0){
+      listBox.innerHTML = '<div class="tareas-empty">No hay tareas con este filtro.</div>';
+    }else{
+      const ordenadas = [...filtradas].sort((a,b) => (a.done === b.done) ? 0 : (a.done ? 1 : -1));
+      ordenadas.forEach(t => listBox.appendChild(filaTarea(t)));
+    }
+    cont.appendChild(listBox);
+  }else{
+    DIAS.forEach(d => {
+      const deEsteDia = filtradas.filter(t => t.dia === d.key);
+      if(deEsteDia.length === 0) return;
+      const box = document.createElement('div');
+      box.className = 'semana-day';
+      box.style.marginBottom = '10px';
+      box.innerHTML = `<div class="semana-day-head"><span class="nombre">${d.label}</span></div>`;
+      const body = document.createElement('div');
+      body.className = 'tareas-list';
+      deEsteDia.sort((a,b) => (a.done === b.done) ? 0 : (a.done ? 1 : -1)).forEach(t => body.appendChild(filaTarea(t)));
+      box.appendChild(body);
+      cont.appendChild(box);
+    });
+    const sinDia = filtradas.filter(t => !t.dia);
+    if(sinDia.length){
+      const box = document.createElement('div');
+      box.className = 'semana-day';
+      box.innerHTML = `<div class="semana-day-head"><span class="nombre">Sin día asignado</span></div>`;
+      const body = document.createElement('div');
+      body.className = 'tareas-list';
+      sinDia.sort((a,b) => (a.done === b.done) ? 0 : (a.done ? 1 : -1)).forEach(t => body.appendChild(filaTarea(t)));
+      box.appendChild(body);
+      cont.appendChild(box);
+    }
+    if(cont.children.length === 0){
+      cont.innerHTML = '<div class="tareas-empty">No hay tareas con este filtro.</div>';
+    }
+  }
+}
+
+function filaTarea(t){
+  const row = document.createElement('div');
+  row.className = `tarea ${t.done?'done':''}`;
+  const col = colorMateria(t.materia);
+  const tipoLabel = (TIPOS_TAREA.find(x => x.key === t.tipo) || {label:'Otro'}).label;
+  const diaLabel = (DIAS.find(x => x.key === t.dia) || {}).label;
+  row.innerHTML = `
+    <input type="checkbox" ${t.done?'checked':''}>
+    <div class="tarea-tags">
+      <span class="tarea-tag" style="background:${col.tint};color:${col.strong}">${nombreCortoMateria(t.materia)}</span>
+      <span class="tarea-tag tipo">${tipoLabel}</span>
+      ${diaLabel ? `<span class="tarea-tag dia">${diaLabel}</span>` : ''}
+    </div>
+    <span class="tarea-txt">${t.texto}</span>
+    <button type="button" class="tarea-del" aria-label="Eliminar">×</button>
+  `;
+  row.querySelector('input').addEventListener('change', ev => {
+    t.done = ev.target.checked;
+    guardarTareas();
+    renderTareas();
+    buildSemana();
+  });
+  row.querySelector('.tarea-del').addEventListener('click', () => {
+    TAREAS = TAREAS.filter(x => x.id !== t.id);
+    guardarTareas();
+    renderTareas();
+    buildSemana();
+  });
+  return row;
+}
+
+document.getElementById('tareaAdd').addEventListener('click', () => {
+  const input = document.getElementById('tareaInput');
+  const texto = input.value.trim();
+  if(!texto) return;
+  TAREAS.push({
+    id:'t'+Date.now()+Math.random().toString(36).slice(2,6),
+    texto,
+    materia: document.getElementById('tareaMateria').value,
+    tipo: document.getElementById('tareaTipo').value,
+    dia: document.getElementById('tareaDia').value,
+    done:false,
+  });
+  input.value = '';
+  guardarTareas();
+  renderTareas();
+  buildSemana();
+});
+document.getElementById('tareaInput').addEventListener('keydown', e => { if(e.key === 'Enter') document.getElementById('tareaAdd').click(); });
+document.getElementById('limpiarHechas').addEventListener('click', () => {
+  TAREAS = TAREAS.filter(t => !t.done);
+  guardarTareas();
+  renderTareas();
+});
+document.getElementById('filtroMateria').addEventListener('change', e => { filtroMateria = e.target.value; renderTareas(); });
+document.getElementById('filtroTipo').addEventListener('change', e => { filtroTipo = e.target.value; renderTareas(); });
+document.querySelectorAll('.vista-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.vista-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    vistaTareas = btn.dataset.vista;
+    renderTareas();
+  });
+});
+
+/* =======================================================================
+   ESTUDIO (timer + carga manual + historial + resumen semanal)
+   ======================================================================= */
+let ESTUDIO_LOG = [];
+let timerInterval = null;
+let timerInicio = null;
+
+function poblarSelectsEstudio(){
+  const materiaOpts = MATERIAS.map(m => ({key:m.id, label:m.corto}));
+  [document.getElementById('timerMateria'), document.getElementById('manMateria')].forEach(sel => {
+    poblarSelect(sel, materiaOpts);
+  });
+  [document.getElementById('timerTipo'), document.getElementById('manTipo')].forEach(sel => {
+    poblarSelect(sel, TIPOS_ESTUDIO);
+  });
+  actualizarTemasEstudio(document.getElementById('timerMateria').value, document.getElementById('timerTema'));
+  actualizarTemasEstudio(document.getElementById('manMateria').value, document.getElementById('manTema'));
+}
+function actualizarTemasEstudio(materiaId, selTema){
+  const m = MATERIA_POR_ID[materiaId];
+  if(!m){ selTema.innerHTML = '<option value="">—</option>'; return; }
+  const opts = [];
+  m.temas.forEach(t => {
+    if(t.subtemas) t.subtemas.forEach(s => opts.push({key:`${t.id}::${s.id}`, label:s.nombre}));
+    else opts.push({key:t.id, label:t.nombre});
+  });
+  selTema.innerHTML = opts.map(o => `<option value="${o.key}">${o.label}</option>`).join('');
+}
+document.getElementById('timerMateria').addEventListener('change', e => actualizarTemasEstudio(e.target.value, document.getElementById('timerTema')));
+document.getElementById('manMateria').addEventListener('change', e => actualizarTemasEstudio(e.target.value, document.getElementById('manTema')));
+
+async function cargarLog(){
+  try{
+    const r = await Almacen.leer('estudio-log');
+    ESTUDIO_LOG = r ? JSON.parse(r.value) : [];
+  }catch(e){ ESTUDIO_LOG = []; }
+}
+function guardarLog(){
+  try{
+    Almacen.guardar('estudio-log', JSON.stringify(ESTUDIO_LOG)).catch(e => console.error('No se pudo guardar el log:', e));
+  }catch(e){ console.error('Almacen no disponible:', e); }
+}
+
+function fmtHHMMSS(ms){
+  const s = Math.floor(ms/1000);
+  const hh = String(Math.floor(s/3600)).padStart(2,'0');
+  const mm = String(Math.floor((s%3600)/60)).padStart(2,'0');
+  const ss = String(s%60).padStart(2,'0');
+  return `${hh}:${mm}:${ss}`;
+}
+
+async function cargarTimerActivo(){
+  try{
+    const r = await Almacen.leer('estudio-timer-activo');
+    if(r){
+      const data = JSON.parse(r.value);
+      timerInicio = new Date(data.inicio);
+      document.getElementById('timerMateria').value = data.materia;
+      actualizarTemasEstudio(data.materia, document.getElementById('timerTema'));
+      document.getElementById('timerTema').value = data.tema;
+      document.getElementById('timerTipo').value = data.tipo;
+      iniciarIntervalo();
+      const btn = document.getElementById('timerBtn');
+      btn.textContent = 'Detener y guardar';
+      btn.className = 'timer-btn stop';
+    }
+  }catch(e){ /* sin timer activo */ }
+}
+function guardarTimerActivo(){
+  const data = {
+    inicio: timerInicio.toISOString(),
+    materia: document.getElementById('timerMateria').value,
+    tema: document.getElementById('timerTema').value,
+    tipo: document.getElementById('timerTipo').value,
+  };
+  try{ Almacen.guardar('estudio-timer-activo', JSON.stringify(data)).catch(()=>{}); }catch(e){}
+}
+function borrarTimerActivo(){
+  try{ Almacen.borrar('estudio-timer-activo').catch(()=>{}); }catch(e){}
+}
+
+function iniciarIntervalo(){
+  const disp = document.getElementById('timerDisplay');
+  disp.classList.remove('off');
+  timerInterval = setInterval(() => {
+    disp.textContent = fmtHHMMSS(new Date() - timerInicio);
+  }, 1000);
+}
+
+document.getElementById('timerBtn').addEventListener('click', () => {
+  const btn = document.getElementById('timerBtn');
+  if(!timerInicio){
+    timerInicio = new Date();
+    guardarTimerActivo();
+    iniciarIntervalo();
+    btn.textContent = 'Detener y guardar';
+    btn.className = 'timer-btn stop';
+  }else{
+    clearInterval(timerInterval);
+    const fin = new Date();
+    const materia = document.getElementById('timerMateria').value;
+    const tema = document.getElementById('timerTema').value;
+    const tipo = document.getElementById('timerTipo').value;
+    registrarSesion(timerInicio, fin, materia, tema, tipo);
+    timerInicio = null;
+    borrarTimerActivo();
+    document.getElementById('timerDisplay').textContent = '00:00:00';
+    document.getElementById('timerDisplay').classList.add('off');
+    btn.textContent = 'Iniciar';
+    btn.className = 'timer-btn start';
+  }
+});
+
+function registrarSesion(inicio, fin, materiaId, temaKey, tipo){
+  const minutos = Math.max(1, Math.round((fin - inicio) / 60000));
+  ESTUDIO_LOG.unshift({
+    id:'e'+Date.now()+Math.random().toString(36).slice(2,6),
+    fecha: inicio.toISOString().slice(0,10),
+    inicio: inicio.toISOString(),
+    fin: fin.toISOString(),
+    minutos,
+    materia: materiaId,
+    tema: temaKey,
+    tipo,
+  });
+  guardarLog();
+  renderLog();
+  renderResumenSemana();
+  buildSemana();
+}
+
+function nombreTema(materiaId, temaKey){
+  const m = MATERIA_POR_ID[materiaId];
+  if(!m || !temaKey) return '—';
+  if(temaKey.includes('::')){
+    const [tId, sId] = temaKey.split('::');
+    const t = m.temas.find(x => x.id === tId);
+    const s = t && t.subtemas && t.subtemas.find(x => x.id === sId);
+    return s ? s.nombre : temaKey;
+  }
+  const t = m.temas.find(x => x.id === temaKey);
+  return t ? t.nombre : temaKey;
+}
+
+document.getElementById('manAdd').addEventListener('click', () => {
+  const fecha = document.getElementById('manFecha').value;
+  const hi = document.getElementById('manInicio').value;
+  const hf = document.getElementById('manFin').value;
+  const materia = document.getElementById('manMateria').value;
+  const tema = document.getElementById('manTema').value;
+  const tipo = document.getElementById('manTipo').value;
+  if(!fecha || !hi || !hf){ alert('Completá fecha, hora inicio y hora fin.'); return; }
+  const inicio = new Date(`${fecha}T${hi}:00`);
+  const fin = new Date(`${fecha}T${hf}:00`);
+  if(fin <= inicio){ alert('La hora fin tiene que ser después de la hora inicio.'); return; }
+  registrarSesion(inicio, fin, materia, tema, tipo);
+  document.getElementById('manInicio').value = '';
+  document.getElementById('manFin').value = '';
+});
+document.getElementById('manFecha').value = HOY.toISOString().slice(0,10);
+
+function renderLog(){
+  const cont = document.getElementById('logList');
+  cont.innerHTML = '';
+  if(ESTUDIO_LOG.length === 0){
+    cont.innerHTML = '<div class="log-empty">Todavía no cargaste ninguna sesión de estudio.</div>';
+    return;
+  }
+  ESTUDIO_LOG.slice(0, 40).forEach(s => {
+    const col = colorMateria(s.materia);
+    const tipoLabel = (TIPOS_ESTUDIO.find(x => x.key === s.tipo) || {label:'Otro'}).label;
+    const row = document.createElement('div');
+    row.className = 'log-item';
+    row.innerHTML = `
+      <div class="log-item-top">
+        <span><span class="tarea-tag" style="background:${col.tint};color:${col.strong}">${nombreCortoMateria(s.materia)}</span> ${fmtDate(new Date(s.fecha+'T00:00:00'))}</span>
+        <span class="dur">${s.minutos} min <button type="button" class="log-del">×</button></span>
+      </div>
+      <div class="meta">${tipoLabel} — ${nombreTema(s.materia, s.tema)}</div>
+    `;
+    row.querySelector('.log-del').addEventListener('click', () => {
+      ESTUDIO_LOG = ESTUDIO_LOG.filter(x => x.id !== s.id);
+      guardarLog();
+      renderLog();
+      renderResumenSemana();
+    });
+    cont.appendChild(row);
+  });
+}
+
+function renderResumenSemana(){
+  const cont = document.getElementById('resumenSemana');
+  const lunes = inicioSemanaActual();
+  const domingo = new Date(lunes); domingo.setDate(domingo.getDate()+6); domingo.setHours(23,59,59,999);
+  const porMateria = {};
+  MATERIAS.forEach(m => porMateria[m.id] = 0);
+  ESTUDIO_LOG.forEach(s => {
+    const f = new Date(s.fecha+'T00:00:00');
+    if(f >= lunes && f <= domingo && porMateria[s.materia] !== undefined) porMateria[s.materia] += s.minutos;
+  });
+  const max = Math.max(1, ...Object.values(porMateria));
+  const total = Object.values(porMateria).reduce((a,b)=>a+b,0);
+
+  if(total === 0){
+    cont.innerHTML = '<div class="resumen-nota">Todavía no registraste estudio esta semana. Arrancá con el cronómetro o cargá una sesión manual.</div>';
+    return;
+  }
+
+  const ordenado = MATERIAS.map(m => ({m, min:porMateria[m.id]})).sort((a,b) => b.min - a.min);
+  cont.innerHTML = ordenado.map(({m, min}) => `
+    <div class="barra-materia">
+      <div class="barra-materia-top"><span>${m.corto}</span><b>${min} min</b></div>
+      <div class="barra-track"><div class="barra-fill" style="width:${Math.round((min/max)*100)}%; background:${m.strong};"></div></div>
+    </div>
+  `).join('') + `<div class="resumen-nota">Total esta semana: <b>${total} min</b> (${(total/60).toFixed(1)} hs). La materia con menos tiempo cargado es la que más atención necesita.</div>`;
+}
+
+async function buildEstudio(){
+  poblarSelectsEstudio();
+  await cargarLog();
+  renderLog();
+  renderResumenSemana();
+  await cargarTimerActivo();
+}
+
+/* =======================================================================
+   INIT
+   ======================================================================= */
+(async () => {
+  await iniciarAlmacen();
+  await cargarTareas();
+  renderTareas();
+  await buildProgreso();
+  await buildSemana();
+  await buildEstudio();
+})();
+</script>
+</body>
+</html>
