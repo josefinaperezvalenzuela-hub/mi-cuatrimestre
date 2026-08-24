@@ -295,6 +295,23 @@
   .log-del{background:none; border:none; color:var(--ink-faint); font-size:14px; cursor:pointer; padding:0 4px;}
   .log-empty{font-size:12px; color:var(--ink-faint); padding:14px 12px; text-align:center;}
 
+  /* ---- Cronograma tab ---- */
+  .cron-materia{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; margin-bottom:14px;}
+  .cron-materia-head{padding:10px 14px; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:14px;}
+  .cron-row{
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    padding:9px 14px; border-top:1px solid var(--paper-line); font-size:12.5px;
+  }
+  .cron-row .cron-nombre{flex:1; min-width:140px;}
+  .cron-row.editado .cron-nombre{color:var(--warn);}
+  .cron-row input[type=date]{
+    font-family:'IBM Plex Mono', monospace; font-size:11.5px;
+    padding:6px 7px; border:1px solid var(--line); border-radius:7px;
+    background:var(--paper); color:var(--ink);
+  }
+  .cron-reset{background:none; border:none; color:var(--ink-faint); font-size:14px; cursor:pointer; padding:2px 4px;}
+  .cron-tag{font-family:'IBM Plex Mono', monospace; font-size:9px; color:var(--ink-faint);}
+
   .clave-overlay{
     position:fixed; inset:0; background:var(--paper);
     display:flex; align-items:center; justify-content:center;
@@ -340,6 +357,7 @@
     <button class="tab-btn" data-tab="progreso">Progreso</button>
     <button class="tab-btn" data-tab="tareas">Tareas</button>
     <button class="tab-btn" data-tab="estudio">Estudio</button>
+    <button class="tab-btn" data-tab="cronograma">Cronograma</button>
   </nav>
 
   <!-- ============ TAB: SEMANA ============ -->
@@ -430,6 +448,12 @@
 
     <h2 class="section-title">Historial</h2>
     <div class="log-list" id="logList"></div>
+  </section>
+
+  <!-- ============ TAB: CRONOGRAMA ============ -->
+  <section class="tab-panel" id="tab-cronograma">
+    <p class="sub" style="margin-bottom:14px;">Si una clase, entrega o parcial se corre de fecha, editala acá — se actualiza sola en Semana y Progreso. Lo que edites queda marcado como "editado"; podés volver al plan original con ↺.</p>
+    <div id="cronogramaGrid"></div>
   </section>
 
   <footer>Todo se guarda en este dispositivo. Es tuyo — actualizalo cuando quieras.</footer>
@@ -725,19 +749,62 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 });
 
 /* =======================================================================
+   OVERRIDES DE CRONOGRAMA (fechas editadas a mano, guardadas aparte del
+   plan original — así si el cronograma real cambia, lo ajustás vos sin
+   perder el plan base)
+   ======================================================================= */
+MATERIAS.forEach(m => { m.hitos.forEach((h, i) => { h.id = `${m.id}-hito-${i}`; }); });
+
+let OVERRIDES = {};
+async function cargarOverrides(){
+  try{
+    const r = await Almacen.leer('cronograma-overrides');
+    OVERRIDES = r ? JSON.parse(r.value) : {};
+  }catch(e){ OVERRIDES = {}; }
+}
+function guardarOverrides(){
+  try{ Almacen.guardar('cronograma-overrides', JSON.stringify(OVERRIDES)).catch(e => console.error('No se pudo guardar el cronograma editado:', e)); }
+  catch(e){ console.error('Almacen no disponible:', e); }
+}
+function overridesDe(materiaId){
+  if(!OVERRIDES[materiaId]) OVERRIDES[materiaId] = {temas:{}, hitos:{}};
+  if(!OVERRIDES[materiaId].temas) OVERRIDES[materiaId].temas = {};
+  if(!OVERRIDES[materiaId].hitos) OVERRIDES[materiaId].hitos = {};
+  return OVERRIDES[materiaId];
+}
+function fechaTema(materiaId, id, original){
+  const o = OVERRIDES[materiaId];
+  return (o && o.temas && o.temas[id]) || original;
+}
+function fechaHito(materiaId, id, original){
+  const o = OVERRIDES[materiaId];
+  return (o && o.hitos && o.hitos[id]) || original;
+}
+function editarFechaTema(materiaId, id, fecha){
+  const o = overridesDe(materiaId);
+  if(fecha) o.temas[id] = fecha; else delete o.temas[id];
+  guardarOverrides();
+}
+function editarFechaHito(materiaId, id, fecha){
+  const o = overridesDe(materiaId);
+  if(fecha) o.hitos[id] = fecha; else delete o.hitos[id];
+  guardarOverrides();
+}
+
+/* =======================================================================
    PROGRESO (temas / subtemas con chips de 3 estados)
    ======================================================================= */
-function expectedPesoTema(t){
-  if(t.subtemas) return t.subtemas.filter(s => new Date(s.fecha+'T00:00:00') <= HOY).length;
-  return new Date(t.fecha+'T00:00:00') <= HOY ? 3 : 0;
+function expectedPesoTema(m, t){
+  if(t.subtemas) return t.subtemas.filter(s => new Date(fechaTema(m.id, `${t.id}::${s.id}`, s.fecha)+'T00:00:00') <= HOY).length;
+  return new Date(fechaTema(m.id, t.id, t.fecha)+'T00:00:00') <= HOY ? 3 : 0;
 }
 function expectedPct(m){
   const total = m.temas.reduce((acc, t) => acc + (t.subtemas ? t.subtemas.length : 3), 0);
-  const done = m.temas.reduce((acc, t) => acc + expectedPesoTema(t), 0);
+  const done = m.temas.reduce((acc, t) => acc + expectedPesoTema(m, t), 0);
   return Math.round((done/total)*100);
 }
-function nextHito(hitos){
-  const futuros = hitos.filter(h => new Date(h.fecha+'T00:00:00') >= HOY);
+function nextHito(m){
+  const futuros = m.hitos.filter(h => new Date(fechaHito(m.id, h.id, h.fecha)+'T00:00:00') >= HOY);
   return futuros.length ? futuros[0] : null;
 }
 
@@ -829,7 +896,7 @@ async function buildProgreso(){
     const exp = expectedPct(m);
     const act = Math.round((done/total) * 100);
     const st = statusFor(act, exp);
-    const nh = nextHito(m.hitos);
+    const nh = nextHito(m);
 
     const card = document.createElement('div');
     card.className = 'card';
@@ -865,19 +932,21 @@ async function buildProgreso(){
     m.temas.forEach(t => {
       const maxT = maxPesoTema(t);
       const nDone = pesoTema(STATE[m.id], t);
+      const fT = fechaTema(m.id, t.id, t.fecha);
       const isFuture = t.subtemas
-        ? t.subtemas.every(s => new Date(s.fecha+'T00:00:00') > HOY)
-        : new Date(t.fecha+'T00:00:00') > HOY;
+        ? t.subtemas.every(s => new Date(fechaTema(m.id, `${t.id}::${s.id}`, s.fecha)+'T00:00:00') > HOY)
+        : new Date(fT+'T00:00:00') > HOY;
       const row = document.createElement('div');
       row.className = `item ${nDone===maxT?'done':''} ${isFuture?'future':''}`;
-      const fechaLabel = t.subtemas ? `Evaluación ${fmtDate(new Date(t.fecha+'T00:00:00'))}` : fmtDate(new Date(t.fecha+'T00:00:00'));
+      const fechaLabel = t.subtemas ? `Evaluación ${fmtDate(new Date(fT+'T00:00:00'))}` : fmtDate(new Date(fT+'T00:00:00'));
 
       const chipsHtml = t.subtemas
         ? t.subtemas.map(s => {
             const sub = subestadoDe(STATE[m.id], t.id);
             const st2 = sub[s.id] || 'no';
-            const subFuture = new Date(s.fecha+'T00:00:00') > HOY;
-            return `<button type="button" class="chip ${st2} ${subFuture?'chip-future':''}" data-sub="${s.id}"><span class="dot"></span>${fmtDate(new Date(s.fecha+'T00:00:00'))} · ${s.nombre}</button>`;
+            const fS = fechaTema(m.id, `${t.id}::${s.id}`, s.fecha);
+            const subFuture = new Date(fS+'T00:00:00') > HOY;
+            return `<button type="button" class="chip ${st2} ${subFuture?'chip-future':''}" data-sub="${s.id}"><span class="dot"></span>${fmtDate(new Date(fS+'T00:00:00'))} · ${s.nombre}</button>`;
           }).join('')
         : ETAPAS.map(et => {
             const e = etapasDe(STATE[m.id], t.id);
@@ -959,16 +1028,16 @@ function itemsDeLaSemana(){
     m.temas.forEach(t => {
       if(t.subtemas){
         t.subtemas.forEach(s => {
-          const f = new Date(s.fecha+'T00:00:00');
+          const f = new Date(fechaTema(m.id, `${t.id}::${s.id}`, s.fecha)+'T00:00:00');
           if(f >= lunes && f <= domingo) items.push({fecha:f, materia:m, texto:s.nombre, tipo:'clase'});
         });
       }else{
-        const f = new Date(t.fecha+'T00:00:00');
+        const f = new Date(fechaTema(m.id, t.id, t.fecha)+'T00:00:00');
         if(f >= lunes && f <= domingo) items.push({fecha:f, materia:m, texto:t.nombre, tipo:'clase'});
       }
     });
     m.hitos.forEach(h => {
-      const f = new Date(h.fecha+'T00:00:00');
+      const f = new Date(fechaHito(m.id, h.id, h.fecha)+'T00:00:00');
       if(f >= lunes && f <= domingo) items.push({fecha:f, materia:m, texto:h.texto, tipo:'hito'});
     });
   });
@@ -1122,6 +1191,11 @@ function renderTareas(){
 function filaTarea(t){
   const row = document.createElement('div');
   row.className = `tarea ${t.done?'done':''}`;
+  pintarFilaTarea(row, t);
+  return row;
+}
+
+function pintarFilaTarea(row, t){
   const col = colorMateria(t.materia);
   const tipoLabel = (TIPOS_TAREA.find(x => x.key === t.tipo) || {label:'Otro'}).label;
   const diaLabel = (DIAS.find(x => x.key === t.dia) || {}).label;
@@ -1133,6 +1207,7 @@ function filaTarea(t){
       ${diaLabel ? `<span class="tarea-tag dia">${diaLabel}</span>` : ''}
     </div>
     <span class="tarea-txt">${t.texto}</span>
+    <button type="button" class="tarea-edit" aria-label="Editar" style="background:none;border:none;color:var(--ink-faint);font-size:13px;cursor:pointer;padding:2px 4px;">✎</button>
     <button type="button" class="tarea-del" aria-label="Eliminar">×</button>
   `;
   row.querySelector('input').addEventListener('change', ev => {
@@ -1147,7 +1222,52 @@ function filaTarea(t){
     renderTareas();
     buildSemana();
   });
-  return row;
+  row.querySelector('.tarea-edit').addEventListener('click', () => pintarFormEdicion(row, t));
+}
+
+function pintarFormEdicion(row, t){
+  row.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:6px;width:100%;">
+      <input type="text" class="edit-texto" value="${t.texto.replace(/"/g,'&quot;')}" style="font-family:'IBM Plex Sans',sans-serif;font-size:13px;padding:7px 9px;border:1px solid var(--line);border-radius:7px;">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <select class="edit-materia" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:6px;border:1px solid var(--line);border-radius:7px;">
+          <option value="general">General</option>
+          <option value="ou">OU</option>
+          <option value="cmi">CMI</option>
+          <option value="et">ET</option>
+          <option value="em">EM</option>
+        </select>
+        <select class="edit-tipo" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:6px;border:1px solid var(--line);border-radius:7px;">
+          ${TIPOS_TAREA.map(x => `<option value="${x.key}">${x.label}</option>`).join('')}
+        </select>
+        <select class="edit-dia" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:6px;border:1px solid var(--line);border-radius:7px;">
+          <option value="">Sin día</option>
+          ${DIAS.map(d => `<option value="${d.key}">${d.label}</option>`).join('')}
+        </select>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button type="button" class="edit-guardar" style="flex:1;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:12.5px;padding:8px;border:none;border-radius:7px;background:var(--ink);color:#fff;cursor:pointer;">Guardar</button>
+        <button type="button" class="edit-cancelar" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:8px 12px;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--ink-soft);cursor:pointer;">Cancelar</button>
+      </div>
+    </div>
+  `;
+  row.querySelector('.edit-texto').value = t.texto;
+  row.querySelector('.edit-materia').value = t.materia;
+  row.querySelector('.edit-tipo').value = t.tipo;
+  row.querySelector('.edit-dia').value = t.dia;
+  row.querySelector('.edit-guardar').addEventListener('click', () => {
+    const nuevoTexto = row.querySelector('.edit-texto').value.trim();
+    if(!nuevoTexto) return;
+    t.texto = nuevoTexto;
+    t.materia = row.querySelector('.edit-materia').value;
+    t.tipo = row.querySelector('.edit-tipo').value;
+    t.dia = row.querySelector('.edit-dia').value;
+    guardarTareas();
+    pintarFilaTarea(row, t);
+    renderTareas();
+    buildSemana();
+  });
+  row.querySelector('.edit-cancelar').addEventListener('click', () => pintarFilaTarea(row, t));
 }
 
 document.getElementById('tareaAdd').addEventListener('click', () => {
@@ -1410,15 +1530,99 @@ async function buildEstudio(){
 }
 
 /* =======================================================================
+   CRONOGRAMA (editar fechas de temas/subtemas/hitos)
+   ======================================================================= */
+async function refrescarTrasEdicion(){
+  await renderMiniRow();
+  await buildSemana();
+}
+
+function filaCronograma(materiaId, id, nombre, fechaOriginal, tag, onEditar, onReset){
+  const fechaEfectiva = fechaOriginal;
+  const editado = fechaEfectiva !== null && fechaEfectiva !== undefined && fechaEfectiva.esOverride;
+  const row = document.createElement('div');
+  row.className = `cron-row ${editado ? 'editado' : ''}`;
+  row.innerHTML = `
+    <span class="cron-nombre">${nombre} ${tag ? `<span class="cron-tag">${tag}</span>` : ''}</span>
+    <input type="date" value="${fechaEfectiva.valor}">
+    ${editado ? '<button type="button" class="cron-reset" title="Volver a la fecha original">↺</button>' : ''}
+  `;
+  row.querySelector('input').addEventListener('change', (e) => {
+    onEditar(e.target.value);
+    buildCronograma();
+    refrescarTrasEdicion();
+  });
+  const resetBtn = row.querySelector('.cron-reset');
+  if(resetBtn){
+    resetBtn.addEventListener('click', () => {
+      onReset();
+      buildCronograma();
+      refrescarTrasEdicion();
+    });
+  }
+  return row;
+}
+
+function buildCronograma(){
+  const cont = document.getElementById('cronogramaGrid');
+  cont.innerHTML = '';
+  MATERIAS.forEach(m => {
+    const box = document.createElement('div');
+    box.className = 'cron-materia';
+    box.style.borderLeft = `3px solid ${m.strong}`;
+    box.innerHTML = `<div class="cron-materia-head" style="background:${m.tint};color:${m.strong};">${m.nombre}</div>`;
+
+    m.temas.forEach(t => {
+      if(t.subtemas){
+        t.subtemas.forEach(s => {
+          const key = `${t.id}::${s.id}`;
+          const ov = OVERRIDES[m.id] && OVERRIDES[m.id].temas && OVERRIDES[m.id].temas[key];
+          box.appendChild(filaCronograma(
+            m.id, key, s.nombre,
+            {valor: ov || s.fecha, esOverride: !!ov},
+            t.nombre,
+            (val) => editarFechaTema(m.id, key, val),
+            () => editarFechaTema(m.id, key, null)
+          ));
+        });
+      }else{
+        const ov = OVERRIDES[m.id] && OVERRIDES[m.id].temas && OVERRIDES[m.id].temas[t.id];
+        box.appendChild(filaCronograma(
+          m.id, t.id, t.nombre,
+          {valor: ov || t.fecha, esOverride: !!ov},
+          'clase',
+          (val) => editarFechaTema(m.id, t.id, val),
+          () => editarFechaTema(m.id, t.id, null)
+        ));
+      }
+    });
+    m.hitos.forEach(h => {
+      const ov = OVERRIDES[m.id] && OVERRIDES[m.id].hitos && OVERRIDES[m.id].hitos[h.id];
+      box.appendChild(filaCronograma(
+        m.id, h.id, h.texto,
+        {valor: ov || h.fecha, esOverride: !!ov},
+        'entrega/parcial',
+        (val) => editarFechaHito(m.id, h.id, val),
+        () => editarFechaHito(m.id, h.id, null)
+      ));
+    });
+
+    cont.appendChild(box);
+  });
+}
+
+/* =======================================================================
    INIT
    ======================================================================= */
 (async () => {
   await iniciarAlmacen();
+  await cargarOverrides();
   await cargarTareas();
   renderTareas();
   await buildProgreso();
   await buildSemana();
   await buildEstudio();
+  buildCronograma();
 })();
 </script>
 </body>
