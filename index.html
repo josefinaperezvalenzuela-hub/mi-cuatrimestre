@@ -364,15 +364,29 @@
   </header>
 
   <nav class="tabs">
-    <button class="tab-btn active" data-tab="semana">Semana</button>
+    <button class="tab-btn active" data-tab="chequeo">Chequeo</button>
+    <button class="tab-btn" data-tab="semana">Semana</button>
     <button class="tab-btn" data-tab="progreso">Progreso</button>
     <button class="tab-btn" data-tab="tareas">Tareas</button>
     <button class="tab-btn" data-tab="estudio">Estudio</button>
     <button class="tab-btn" data-tab="cronograma">Cronograma</button>
   </nav>
 
+  <!-- ============ TAB: CHEQUEO SEMANAL ============ -->
+  <section class="tab-panel active" id="tab-chequeo">
+    <div class="mini-row" id="miniRowChequeo"></div>
+    <h2 class="section-title" id="chequeoTitulo">Chequeo semanal</h2>
+    <div id="checklistRitual"></div>
+
+    <h2 class="section-title">Esta semana, de un vistazo</h2>
+    <div id="semanaCondensada"></div>
+
+    <h2 class="section-title">Tareas pendientes</h2>
+    <div id="tareasPendientesChequeo"></div>
+  </section>
+
   <!-- ============ TAB: SEMANA ============ -->
-  <section class="tab-panel active" id="tab-semana">
+  <section class="tab-panel" id="tab-semana">
     <div class="mini-row" id="miniRow"></div>
     <h2 class="section-title">Esta semana, día por día</h2>
     <div class="semana-grid" id="semanaGrid"></div>
@@ -674,30 +688,24 @@ const MATERIAS = [
     tint:'#EDE5F7', strong:'#7C5CAE',
     temas:[
       {id:'cmi-1', fecha:'2026-08-03', nombre:'Arquitectura Industrial'},
-      {id:'cmi-2', fecha:'2026-08-10', nombre:'Movimientos de Suelos'},
-      {id:'cmi-3', fecha:'2026-08-24', nombre:'Acciones sobre las Estructuras — Naves Industriales'},
-      {id:'cmi-4', fecha:'2026-08-31', nombre:'Construcciones de Hormigón Armado'},
-      {id:'cmi-5', fecha:'2026-09-07', nombre:'Construcciones de Hormigón Armado (cont.)'},
-      {id:'cmi-6', fecha:'2026-09-14', nombre:'Construcciones de Madera'},
-      {id:'cmi-7', fecha:'2026-09-28', nombre:'Construcciones Metálicas'},
-      {id:'cmi-8', fecha:'2026-10-05', nombre:'Mecánica de Suelos — Cimentaciones'},
-      {id:'cmi-9', fecha:'2026-10-19', nombre:'Calefacción y Aire Acondicionado'},
-      {id:'cmi-10', fecha:'2026-10-26', nombre:'Instalaciones Sanitarias — Efluentes Industriales'},
-      {id:'cmi-11', fecha:'2026-11-02', nombre:'Montajes Industriales'},
-      {id:'cmi-12', fecha:'2026-11-09', nombre:'Planeamiento Gral. de Edificios Industriales'},
+      {id:'cmi-2', fecha:'2026-08-10', nombre:'Mecánica de Suelos + Movimiento de Suelos'},
+      {id:'cmi-3', fecha:'2026-08-24', nombre:'Naves Industriales + Acciones sobre las Estructuras'},
+      {id:'cmi-4', fecha:'2026-09-07', nombre:'Construcciones Metálicas'},
+      {id:'cmi-5', fecha:'2026-09-14', nombre:'Construcciones de Madera'},
+      {id:'cmi-6', fecha:'2026-09-28', nombre:'Construcciones de Hormigón Armado'},
+      // Quedan por ver (sin fecha confirmada todavía — el profesor viene alterando
+      // bastante el orden del programa, así que se agregan cuando se sepan):
+      // Instalaciones en la Industria (U8), Cimentaciones (U10),
+      // Montajes Industriales (U11), Planeamiento Gral. de Edificios (U12)
     ],
     hitos:[
-      {fecha:'2026-08-10', texto:'Entrega TP + Evaluación: Arquitectura Industrial'},
-      {fecha:'2026-08-24', texto:'Entrega TP + Evaluación: Movimientos de Suelos'},
-      {fecha:'2026-08-31', texto:'Entrega TP + Evaluación: Acciones sobre las Estructuras'},
-      {fecha:'2026-09-07', texto:'Evaluación: Hormigón Armado'},
-      {fecha:'2026-09-14', texto:'Entrega TP + Evaluación: Hormigón Armado (cont.)'},
-      {fecha:'2026-09-28', texto:'Entrega TP + Evaluación: Construcciones de Madera'},
-      {fecha:'2026-10-05', texto:'Entrega TP + Evaluación: Construcciones Metálicas'},
-      {fecha:'2026-10-19', texto:'Entrega TP + Evaluación: Mecánica de Suelos'},
-      {fecha:'2026-10-26', texto:'Entrega TP + Evaluación: Calefacción y AA'},
-      {fecha:'2026-11-02', texto:'Entrega TP (x2) + Evaluación: Instalaciones Sanitarias / Montajes'},
-      {fecha:'2026-11-09', texto:'Evaluación final: Planeamiento Gral.'},
+      {fecha:'2026-08-10', texto:'Entrega TP1 + Parcial: Arquitectura Industrial'},
+      {fecha:'2026-08-24', texto:'Entrega TP2 + Parcial: Mecánica y Movimiento de Suelos'},
+      {fecha:'2026-09-07', texto:'Entrega TP3 + Parcial: Naves Industriales + Acciones sobre las Estructuras'},
+      {fecha:'2026-09-14', texto:'Entrega TP4 + Parcial: Construcciones Metálicas'},
+      {fecha:'2026-09-28', texto:'Entrega TP5 + Parcial: Construcciones de Madera'},
+      // Entrega TP6 + parcial de Hormigón Armado: fecha a confirmar (depende de
+      // cuándo sea la próxima clase real).
     ]
   },
   {
@@ -707,6 +715,7 @@ const MATERIAS = [
       {id:'et-1', fecha:'2026-08-04', nombre:'Circuitos Magnéticos'},
       {id:'et-2', fecha:'2026-08-07', nombre:'Corriente Alterna Monofásica'},
       {id:'et-3', fecha:'2026-08-18', nombre:'Corriente Alterna Trifásica'},
+      {id:'et-lineas-bt', fecha:'2026-08-25', nombre:'Líneas Eléctricas de Baja Tensión'},
       {id:'et-4', fecha:'2026-09-01', nombre:'Transformadores'},
       {id:'et-5', fecha:'2026-09-22', nombre:'Generadores de Corriente Continua'},
       {id:'et-6', fecha:'2026-10-06', nombre:'Motor de Corriente Continua'},
@@ -715,11 +724,36 @@ const MATERIAS = [
       {id:'et-9', fecha:'2026-11-10', nombre:'Aislación'},
     ],
     hitos:[
+      {fecha:'2026-08-13', texto:'Lab N°1 (clase) — Elementos de Protección y Maniobra'},
+      {fecha:'2026-08-20', texto:'Lab N°2 (clase) — Mediciones en CA Monofásica'},
+      {fecha:'2026-08-27', texto:'Lab N°3 (clase) — Potencia y f.d.p. con Contador de Energía'},
+      {fecha:'2026-08-27', texto:'Entrega Informe Lab N°1 y N°2'},
+      {fecha:'2026-09-03', texto:'Lab N°4 (clase) — Medición de Potencia Trifásica'},
+      {fecha:'2026-09-03', texto:'Entrega Informe Lab N°3'},
+      {fecha:'2026-09-10', texto:'Lab N°5 (clase) — Transformador: Resistencia y Relación'},
+      {fecha:'2026-09-10', texto:'Entrega Informe Lab N°4'},
+      {fecha:'2026-09-11', texto:'TP4 (Líneas Eléctricas de BT) — resuelto en clase, sin entrega'},
       {fecha:'2026-09-15', texto:'1ª Evaluación Parcial (TPG 1-4 / TPL 1-5)'},
       {fecha:'2026-09-29', texto:'1er Recuperatorio parcial'},
+      {fecha:'2026-10-01', texto:'Lab N°6/7 (clase, suspendido el 24/9, junto con Lab N°8) — Transformador: Ensayo de Vacío / Corto Circuito'},
+      {fecha:'2026-10-01', texto:'Entrega Informe Lab N°5'},
+      {fecha:'2026-10-01', texto:'Lab N°8 (clase) — Generador de CC: Curvas Características'},
+      {fecha:'2026-10-08', texto:'Entrega Informe Lab N°6/7'},
+      {fecha:'2026-10-08', texto:'Lab N°9 (clase) — Motor de CC: Control de velocidad'},
+      {fecha:'2026-10-08', texto:'Entrega Informe Lab N°8'},
+      {fecha:'2026-10-15', texto:'Lab N°10A (clase) — Generador Síncrono: Ensayos y Paralelo'},
+      {fecha:'2026-10-15', texto:'Entrega Informe Lab N°9'},
+      {fecha:'2026-10-22', texto:'Lab N°10B (clase) — Paralelo de Generador y Motor'},
+      {fecha:'2026-10-22', texto:'Entrega Informe Lab N°10A'},
       {fecha:'2026-10-27', texto:'2ª Evaluación Parcial (TPG 5-7 / TPL 5-9)'},
+      {fecha:'2026-10-29', texto:'Lab N°11 (clase) — Arranque y Frenado de Motores'},
+      {fecha:'2026-10-29', texto:'Entrega Informe Lab N°10B'},
       {fecha:'2026-11-03', texto:'2do Recuperatorio parcial'},
+      {fecha:'2026-11-05', texto:'Lab N°12 (clase, solo Mecatrónica) — Ensayo MTA'},
+      {fecha:'2026-11-05', texto:'Entrega Informe Lab N°11'},
       {fecha:'2026-11-10', texto:'Global'},
+      {fecha:'2026-11-12', texto:'Lab N°13 (clase, solo Mecatrónica) — Medición de Aislación'},
+      {fecha:'2026-11-12', texto:'Entrega Informe Lab N°12'},
     ]
   },
   {
@@ -730,14 +764,14 @@ const MATERIAS = [
       {id:'em-2', fecha:'2026-08-11', nombre:'Acoplamientos Temporarios'},
       {id:'em-3', fecha:'2026-08-18', nombre:'Transmisiones por Correas'},
       {id:'em-4', fecha:'2026-08-25', nombre:'Transmisiones por Cadenas'},
-      {id:'em-5', fecha:'2026-09-01', nombre:'Engranajes'},
-      {id:'em-6', fecha:'2026-09-08', nombre:'Fatiga'},
-      {id:'em-7', fecha:'2026-09-15', nombre:'Árboles y Ejes'},
-      {id:'em-8', fecha:'2026-09-22', nombre:'Rodamientos'},
-      {id:'em-9', fecha:'2026-09-29', nombre:'Acoplamientos No Convencionales'},
-      {id:'em-10', fecha:'2026-10-06', nombre:'Vibraciones y Balanceo'},
-      {id:'em-11', fecha:'2026-10-13', nombre:'Circuitos Neumáticos'},
-      {id:'em-12', fecha:'2026-10-20', nombre:'Aplicaciones'},
+      {id:'em-5', fecha:'2026-09-15', nombre:'Engranajes'},
+      {id:'em-6', fecha:'2026-09-29', nombre:'Fatiga'},
+      {id:'em-7', fecha:'2026-10-06', nombre:'Árboles y Ejes'},
+      {id:'em-8', fecha:'2026-10-13', nombre:'Rodamientos'},
+      {id:'em-9', fecha:'2026-10-20', nombre:'Acoplamientos No Convencionales'},
+      {id:'em-10', fecha:'2026-10-27', nombre:'Vibraciones y Balanceo'},
+      {id:'em-11', fecha:'2026-11-03', nombre:'Circuitos Neumáticos'},
+      {id:'em-12', fecha:'2026-11-10', nombre:'Aplicaciones'},
     ],
     hitos:[
       {fecha:'2026-08-11', texto:'Entrega TP N°1'},
@@ -745,13 +779,18 @@ const MATERIAS = [
       {fecha:'2026-08-25', texto:'Entrega TP N°3'},
       {fecha:'2026-09-01', texto:'Entrega TP N°4'},
       {fecha:'2026-09-08', texto:'Entrega TP N°5'},
+      {fecha:'2026-09-08', texto:'1er Parcial'},
       {fecha:'2026-09-15', texto:'Entrega TP N°6'},
-      {fecha:'2026-09-22', texto:'Entrega TP N°7'},
-      {fecha:'2026-09-29', texto:'Entrega TP N°8'},
-      {fecha:'2026-10-06', texto:'Entrega TP N°9'},
-      {fecha:'2026-10-13', texto:'Entrega TP N°10'},
+      {fecha:'2026-09-22', texto:'Entrega TP N°7 (Engranajes)'},
+      {fecha:'2026-09-29', texto:'Entrega TP N°8 (Reductores de Engranajes — 1 de 2)'},
+      {fecha:'2026-09-29', texto:'Entrega TP (Reductores de Engranajes — 2 de 2)'},
+      {fecha:'2026-10-06', texto:'Entrega TP N°9 (Fatiga)'},
+      {fecha:'2026-10-13', texto:'Entrega TP N°10 (Árboles y Ejes)'},
       {fecha:'2026-10-20', texto:'Entrega TP N°11'},
+      {fecha:'2026-10-20', texto:'2do Parcial'},
       {fecha:'2026-10-27', texto:'Entrega TP N°12'},
+      {fecha:'2026-11-10', texto:'Recuperatorio 1er Parcial (14:00 hs)'},
+      {fecha:'2026-11-10', texto:'Recuperatorio 2do Parcial (16:00 hs)'},
     ]
   },
 ];
@@ -943,6 +982,7 @@ function updateCard(card, m){
   card.querySelector('.card-code').textContent = `${m.corto} · ${done}/${total} partes al día`;
   updateOverall();
   renderMiniRow();
+  renderMiniRow('miniRowChequeo');
 }
 
 function updateOverall(){
@@ -1070,8 +1110,9 @@ async function buildProgreso(){
   updateOverall();
 }
 
-async function renderMiniRow(){
-  const row = document.getElementById('miniRow');
+async function renderMiniRow(contId){
+  const row = document.getElementById(contId || 'miniRow');
+  if(!row) return;
   row.innerHTML = '';
   for(const m of MATERIAS){
     if(!STATE[m.id]) STATE[m.id] = await getChecked(m.id);
@@ -1290,12 +1331,14 @@ function pintarFilaTarea(row, t){
     guardarTareas();
     renderTareas();
     buildSemana();
+    buildChequeo();
   });
   row.querySelector('.tarea-del').addEventListener('click', () => {
     TAREAS = TAREAS.filter(x => x.id !== t.id);
     guardarTareas();
     renderTareas();
     buildSemana();
+    buildChequeo();
   });
   row.querySelector('.tarea-edit').addEventListener('click', () => pintarFormEdicion(row, t));
 }
@@ -1341,6 +1384,7 @@ function pintarFormEdicion(row, t){
     pintarFilaTarea(row, t);
     renderTareas();
     buildSemana();
+    buildChequeo();
   });
   row.querySelector('.edit-cancelar').addEventListener('click', () => pintarFilaTarea(row, t));
 }
@@ -1361,6 +1405,7 @@ document.getElementById('tareaAdd').addEventListener('click', () => {
   guardarTareas();
   renderTareas();
   buildSemana();
+  buildChequeo();
 });
 document.getElementById('tareaInput').addEventListener('keydown', e => { if(e.key === 'Enter') document.getElementById('tareaAdd').click(); });
 document.getElementById('limpiarHechas').addEventListener('click', () => {
@@ -1642,6 +1687,107 @@ async function buildEstudio(){
 }
 
 /* =======================================================================
+   CHEQUEO SEMANAL (ritual de domingo/lunes)
+   ======================================================================= */
+const CHEQUEO_ITEMS = [
+  'Revisé el % real vs esperado de las 4 materias',
+  'Revisé qué clases, entregas o parciales tengo esta semana',
+  'Cargué en Tareas lo que tengo que hacer esta semana',
+  'Anoté turnos o compromisos personales de la semana (como tarea "General")',
+  'Elegí qué materia necesita más atención esta semana',
+];
+
+function claveSemanaActual(){
+  return inicioSemanaActual().toISOString().slice(0,10);
+}
+
+let CHEQUEOS = {};
+async function cargarChequeos(){
+  try{
+    const r = await Almacen.leer('chequeo-semanal');
+    CHEQUEOS = r ? JSON.parse(r.value) : {};
+  }catch(e){ CHEQUEOS = {}; }
+}
+function guardarChequeos(){
+  try{ Almacen.guardar('chequeo-semanal', JSON.stringify(CHEQUEOS)).catch(e => console.error('No se pudo guardar el chequeo:', e)); }
+  catch(e){ console.error('Almacen no disponible:', e); }
+}
+
+function renderChecklistRitual(){
+  const cont = document.getElementById('checklistRitual');
+  const clave = claveSemanaActual();
+  if(!CHEQUEOS[clave]) CHEQUEOS[clave] = {};
+  const listBox = document.createElement('div');
+  listBox.className = 'tareas-list';
+  CHEQUEO_ITEMS.forEach((texto, i) => {
+    const checked = !!CHEQUEOS[clave][i];
+    const row = document.createElement('div');
+    row.className = `tarea ${checked?'done':''}`;
+    row.innerHTML = `<input type="checkbox" ${checked?'checked':''}><span class="tarea-txt">${texto}</span>`;
+    row.querySelector('input').addEventListener('change', ev => {
+      CHEQUEOS[clave][i] = ev.target.checked;
+      guardarChequeos();
+      row.classList.toggle('done', ev.target.checked);
+    });
+    listBox.appendChild(row);
+  });
+  cont.innerHTML = '';
+  cont.appendChild(listBox);
+}
+
+function diaCorto(fecha){
+  const s = fecha.toLocaleDateString('es-AR', {weekday:'short', day:'numeric', month:'short'});
+  return (s.charAt(0).toUpperCase() + s.slice(1)).replace('.', '');
+}
+
+function renderSemanaCondensada(){
+  const cont = document.getElementById('semanaCondensada');
+  const items = itemsDeLaSemana().sort((a,b) => a.fecha - b.fecha);
+  if(items.length === 0){
+    cont.innerHTML = '<div class="semana-day"><div class="semana-day-body"><div class="semana-empty">Sin nada cargado en el cronograma esta semana.</div></div></div>';
+    return;
+  }
+  const box = document.createElement('div');
+  box.className = 'semana-day';
+  const body = document.createElement('div');
+  body.className = 'semana-day-body';
+  items.forEach(it => {
+    const row = document.createElement('div');
+    row.className = 'semana-item';
+    row.innerHTML = `<span class="semana-tag" style="background:${it.materia.tint};color:${it.materia.strong}">${it.materia.corto}</span><span>${diaCorto(it.fecha)} — ${it.tipo==='hito'?'⚠ ':''}${it.texto}</span>`;
+    body.appendChild(row);
+  });
+  box.appendChild(body);
+  cont.innerHTML = '';
+  cont.appendChild(box);
+}
+
+function renderTareasPendientesChequeo(){
+  const cont = document.getElementById('tareasPendientesChequeo');
+  const pendientes = TAREAS.filter(t => !t.done);
+  if(pendientes.length === 0){
+    cont.innerHTML = '<div class="tareas-empty">No tenés tareas pendientes. ¡Vas bien!</div>';
+    return;
+  }
+  const listBox = document.createElement('div');
+  listBox.className = 'tareas-list';
+  const ordenDia = {lunes:0, martes:1, miercoles:2, jueves:3, viernes:4, sabado:5, domingo:6, '':7};
+  [...pendientes].sort((a,b) => (ordenDia[a.dia] ?? 7) - (ordenDia[b.dia] ?? 7)).forEach(t => listBox.appendChild(filaTarea(t)));
+  cont.innerHTML = '';
+  cont.appendChild(listBox);
+}
+
+async function buildChequeo(){
+  await renderMiniRow('miniRowChequeo');
+  const inicio = inicioSemanaActual();
+  const fin = new Date(inicio); fin.setDate(fin.getDate() + 6);
+  document.getElementById('chequeoTitulo').textContent = `Chequeo semanal — Semana ${semanaActual()} (${fmtDate(inicio)} al ${fmtDate(fin)})`;
+  renderChecklistRitual();
+  renderSemanaCondensada();
+  renderTareasPendientesChequeo();
+}
+
+/* =======================================================================
    CRONOGRAMA (editar fechas de temas/subtemas/hitos)
    ======================================================================= */
 async function refrescarTrasEdicion(){
@@ -1735,6 +1881,8 @@ function buildCronograma(){
   await buildSemana();
   await buildEstudio();
   buildCronograma();
+  await cargarChequeos();
+  await buildChequeo();
 })();
 </script>
 </body>
